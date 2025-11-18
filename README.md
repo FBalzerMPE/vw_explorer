@@ -11,14 +11,17 @@ This tool allows to parse an observation log file given that it's in the correct
 A representation of these is then saved as a .csv file within the DATAPATH.
 
 ```python
-observations = load_observations(logfile_path="YOUR_PATH/log.txt")
+import vw_guider_analysis as vwg
+observations = vwg.load_observations(logfile_path="YOUR_PATH/log.txt")
+# Print a summary of the run:
+print(vwg.get_observation_summary(observations))
 ```
 
 ### Guider Frame analysis
 
 If you provide a path to your guider frames (which may contain subdirectories for each days), you'll first need to create a Guider Index file (mapping the UT date to the file path). This can be done using
 ```python
-create_guider_index(guider_dir="GuiderDirectory", silent=False)
+vwg.create_guider_index(guider_dir="GuiderDirectory", silent=False)
 ```
 and it may take a bit of time (~1 min per 500 guider frames) as the times need to be read from every fits header.
 
@@ -28,6 +31,6 @@ You can then invoke diagnostic plots for the fits of these Guider Frames, and ge
 
 You may also use
 ```python
-process_observations(observations)
+vwg.process_observations(observations)
 ```
 to produce such plots for each observation.
