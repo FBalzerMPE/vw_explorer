@@ -1,18 +1,22 @@
 from pathlib import Path
-from typing import List, Optional
+from typing import TYPE_CHECKING, List, Optional
 
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from ..classes import GuiderSequence, Observation
 from ..constants import DATA_DIR
 from ..logger import LOGGER
 
+if TYPE_CHECKING:
+    from ..classes import Observation
+
 
 def process_observations(
-    obs_list: List[Observation], outpath: Optional[Path] = None
+    obs_list: List["Observation"], outpath: Optional[Path] = None
 ) -> pd.DataFrame:
     """Processes a list of Observations and saves to CSV."""
+    from ..classes import GuiderSequence, Observation
+
     if outpath is None:
         outpath = DATA_DIR / "observations_processed.csv"
 
@@ -26,14 +30,14 @@ def process_observations(
         g = GuiderSequence(obs)
         if len(g) <= 1:
             LOGGER.warning(
-                f"Skipping observation {obs.uid} with only {len(g)} guider frames."
+                f"Skipping observation {obs.filename} with only {len(g)} guider frames."
             )
             continue
         fig, axes = plt.subplots(1, 2, figsize=(10, 5))
         g.plot_positions("fiducial", ax=axes[0])
         g.plot_fwhm_timeseries(ax=axes[1])
         fig.suptitle(f"Observation: {obs.long_name}", fontsize=16)
-        opath = workdir / f"{obs.uid}_summary.png"
+        opath = workdir / f"{obs.filename}_summary.png"
         fig.savefig(str(opath), dpi=150, bbox_inches="tight")
         plt.close(fig)
         seqs.append(g)

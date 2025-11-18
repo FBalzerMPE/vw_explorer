@@ -3,7 +3,6 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 from ..constants import GUIDER_DIR
-from .guider_frame import GuiderFrame
 
 
 @dataclass
@@ -40,6 +39,9 @@ class ObsTimeslot:
 
     def load_guider_frames(self, guider_fpath: Path = GUIDER_DIR) -> list:
         """Returns guider frames that fall within this time slot."""
+        # import here to avoid circular imports
+        from .guider_frame import GuiderFrame
+
         guider_index_df = GuiderFrame.get_guider_index(guider_fpath)
         mask = guider_index_df["datetime"].apply(self.contains)
         fnames = guider_index_df[mask]["fname"]
