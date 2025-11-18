@@ -5,7 +5,6 @@ from typing import Tuple
 
 import numpy as np
 import pandas as pd
-from math import isnan
 from astropy.io import fits
 
 from ..constants import DATA_DIR, GUIDER_DIR
