@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import List, Optional, Tuple
 
 import pandas as pd
+from astropy.io import fits
 
 from .obs_timeslot import ObsTimeslot
 

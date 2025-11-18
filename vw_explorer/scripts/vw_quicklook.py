@@ -1,6 +1,8 @@
 import argparse
 
-import vw_guider_analysis as vwg
+from vw_explorer.io import load_ifu_data, sanitize_obs_fpath
+from vw_explorer.logger import LOGGER
+from vw_explorer.plotting import plot_ifu_data
 
 
 def parse_args():
@@ -30,12 +32,10 @@ def parse_args():
 
 def main():
     args = parse_args()
-    vwg.LOGGER.setLevel(args.loglevel.upper())
-    fits_path = vwg.sanitize_obs_fpath(args.fpath)
-    fiberpos, flux = vwg.io.load_ifu_data.load_ifu_data(fits_path)
-    vwg.plotting.ifu_data_plots.plot_ifu_data(
-        fiberpos, flux, fits_path.stem, cmap=args.cmap
-    )
+    LOGGER.setLevel(args.loglevel.upper())
+    fits_path = sanitize_obs_fpath(args.fpath)
+    fiberpos, flux = load_ifu_data(fits_path)
+    plot_ifu_data(fiberpos, flux, fits_path.stem, cmap=args.cmap)
     import matplotlib.pyplot as plt
 
     plt.show()

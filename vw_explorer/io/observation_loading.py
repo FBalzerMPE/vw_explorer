@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, List, Optional
 
 import pandas as pd
 
-from ..constants import CALIB_NAMES, DATA_DIR
+from ..constants import CALIB_NAMES, DATA_PATH
 from ..logger import LOGGER
 
 if TYPE_CHECKING:
@@ -55,8 +55,8 @@ def _parse_obs_logfile(
 
 def load_observations(
     logfile_path: Optional[Path] = None,
-    base_datapath: Optional[Path] = DATA_DIR / "observations",
-    backup_path=DATA_DIR / "observations_raw.csv",
+    base_datapath: Optional[Path] = DATA_PATH / "observations",
+    backup_path=DATA_PATH / "observations_raw.csv",
     reload_from_log: bool = False,
 ) -> List["Observation"]:
     """

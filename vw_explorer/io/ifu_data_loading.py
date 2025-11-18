@@ -5,10 +5,11 @@ import numpy as np
 from astropy.io import fits
 
 from ..logger import LOGGER
+from ..constants import ASSET_PATH
 
 
 def _get_fiberpos() -> np.ndarray:
-    fpath = Path(__file__).parent.parent / "IFUcen.txt"
+    fpath = ASSET_PATH / "IFUcen.txt"
     if not fpath.exists():
         raise FileNotFoundError(f"Fiber position file not found at {fpath}")
     fiberpos = np.loadtxt(fpath, comments="#")

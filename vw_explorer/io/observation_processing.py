@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, List, Optional
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from ..constants import DATA_DIR
+from ..constants import DATA_PATH
 from ..logger import LOGGER
 
 if TYPE_CHECKING:
@@ -18,7 +18,7 @@ def process_observations(
     from ..classes import GuiderSequence, Observation
 
     if outpath is None:
-        outpath = DATA_DIR / "observations_processed.csv"
+        outpath = DATA_PATH / "observations_processed.csv"
 
     workdir = outpath.parent / "obs_processing_plots"
     workdir.mkdir(parents=True, exist_ok=True)

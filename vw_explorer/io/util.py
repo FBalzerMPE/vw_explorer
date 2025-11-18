@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Optional
 
-from .logger import LOGGER
+from ..logger import LOGGER
 
 
 def sanitize_obs_fpath(f_in: Optional[str]) -> Path:

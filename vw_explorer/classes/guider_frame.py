@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from astropy.io import fits
 
-from ..constants import DATA_DIR, GUIDER_DIR
+from ..constants import DATA_PATH, GUIDER_DIR
 from ..io.guider_indexing import create_guider_index, load_guider_index
 from .star_model_fit import GuideStarModel
 
@@ -24,7 +24,7 @@ class GuiderFrame:
     def __post_init__(self):
         self.frame_path = Path(self.frame_path)
         if not self.frame_path.exists():
-            self.frame_path = DATA_DIR / self.frame_path
+            self.frame_path = DATA_PATH / self.frame_path
         if not self.frame_path.exists():
             raise FileNotFoundError(f"Guider frame not found: {self.frame_path}")
         self.data = fits.getdata(self.frame_path)  # type: ignore

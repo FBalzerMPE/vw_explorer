@@ -7,15 +7,15 @@ from .classes import (
     ObservationSequence,
     ObsTimeslot,
 )
-from .constants import DATA_DIR
+from .constants import ASSET_PATH, DATA_PATH
 from .io import *
 from .io.guider_indexing import *
 from .logger import LOGGER
 from .plotting import *
 
-_mpstyle_path = DATA_DIR / "inward_ticks.mplstyle"
+_mpstyle_path = ASSET_PATH / "inward_ticks.mplstyle"
 if (_mpstyle_path).exists():
     import matplotlib.pyplot as plt
 
-    LOGGER.info(f"Applying matplotlib style from {str(_mpstyle_path)}")
+    LOGGER.debug(f"Applying matplotlib style from {str(_mpstyle_path)}")
     plt.style.use(str(_mpstyle_path))
