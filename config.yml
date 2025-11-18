@@ -1,0 +1,7 @@
+# Configuration file for vw_explorer.
+# Use either full paths or the {VWE} variable to denote directories as otherwise the paths will be relative to the directory where the script is run from.
+paths:
+  data_dir: "{VWE}/data"                        # Directory to look for the log
+  output_dir: "{VWE}/data"                      # Directory for saving results
+  observation_dir: "{VWE}/data/observations"    # Directory containing FITS files
+  guider_dir: "{VWE}/data/guider_frames"        # Directory containing guider files

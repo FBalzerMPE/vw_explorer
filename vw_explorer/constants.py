@@ -1,12 +1,19 @@
 from pathlib import Path
 
+from .setup import CONFIG
+
 GUIDER_PIXSCALE = 0.533
 """The pixel scale of the VW guider camera in arcseconds per pixel."""
-DATA_PATH = Path(__file__).parent.parent / "data"
+ROOT_DIR = Path(__file__).parent.parent
+ASSET_PATH = ROOT_DIR / "assets"
+DATA_PATH = Path(CONFIG["paths"]["data_dir"])
 """The path to the data directory."""
-ASSET_PATH = DATA_PATH.parent / "assets"
-GUIDER_DIR = DATA_PATH / "guider_frames"
+GUIDER_PATH = Path(CONFIG["paths"]["guider_dir"])
 """The path to the guider frames directory."""
+OBS_PATH = Path(CONFIG["paths"]["observation_dir"])
+"""The path to the observation FITS files directory."""
+OUTPUT_PATH = Path(CONFIG["paths"]["output_dir"])
+"""The path to the output directory."""
 
 CALIB_NAMES = [
     "biases",

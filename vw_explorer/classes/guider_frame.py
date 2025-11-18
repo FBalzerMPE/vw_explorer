@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from astropy.io import fits
 
-from ..constants import DATA_PATH, GUIDER_DIR
+from ..constants import DATA_PATH, GUIDER_PATH
 from ..io.guider_indexing import create_guider_index, load_guider_index
 from .star_model_fit import GuideStarModel
 
@@ -35,7 +35,7 @@ class GuiderFrame:
         self.ut_time = datetime.strptime(dt, "%Y-%m-%dT%H:%M:%S.%f")
 
     @staticmethod
-    def get_guider_index(guider_dir: Path = GUIDER_DIR, **kwargs) -> pd.DataFrame:
+    def get_guider_index(guider_dir: Path = GUIDER_PATH, **kwargs) -> pd.DataFrame:
         """Creates and loads the guider index."""
         if "silent" not in kwargs:
             kwargs["silent"] = True

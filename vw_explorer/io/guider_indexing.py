@@ -6,12 +6,11 @@ from typing import Optional
 import pandas as pd
 from astropy.io import fits
 
-from ..constants import GUIDER_DIR
+from ..constants import GUIDER_PATH
 from ..logger import LOGGER
 
 
 def create_guider_index(
-    guider_dir: Path = GUIDER_DIR,
     output_csv: Optional[Path] = None,
     remove_nonexistent: bool = False,
     silent: bool = False,
@@ -20,10 +19,9 @@ def create_guider_index(
     The function scans the specified directory and its immediate subdirectories for FITS files,
     extracts the observation date and time from their headers, and writes this information to a CSV file.
     """
-    guider_dir = Path(guider_dir)
-    assert guider_dir.exists(), f"Guider directory {guider_dir} does not exist."
+    assert GUIDER_PATH.exists(), f"Guider directory {GUIDER_PATH} does not exist."
     if output_csv is None:
-        output_csv = guider_dir / "guider_index.csv"
+        output_csv = GUIDER_PATH / "guider_index.csv"
     assert output_csv.suffix == ".csv", "Output file must have a .csv extension."
     old_index_df: Optional[pd.DataFrame] = None
     if output_csv.exists():
@@ -48,8 +46,8 @@ def create_guider_index(
                 ].reset_index(drop=True)
                 old_index_df.to_csv(output_csv, index=False)
 
-    files = sorted(guider_dir.glob("*.fits"), key=lambda x: x.stat().st_mtime)
-    for dirpath in [d for d in guider_dir.iterdir() if d.is_dir()]:
+    files = sorted(GUIDER_PATH.glob("*.fits"), key=lambda x: x.stat().st_mtime)
+    for dirpath in [d for d in GUIDER_PATH.iterdir() if d.is_dir()]:
         files.extend(sorted(dirpath.glob("*.fits"), key=lambda x: x.stat().st_mtime))
     if old_index_df is not None:
         prev_files = set(old_index_df["fname"].tolist())
@@ -59,7 +57,7 @@ def create_guider_index(
             LOGGER.info("No new files to index for guider index, skipping operation.")
         return
     if not silent:
-        LOGGER.info(f"Found {len(files)} new files to index in {guider_dir}")
+        LOGGER.info(f"Found {len(files)} new files to index in {GUIDER_PATH}")
     if len(files) > 500:
         if not silent:
             LOGGER.warning(
@@ -95,7 +93,7 @@ def create_guider_index(
         LOGGER.info(f"Wrote {len(df)} rows to {output_csv}")
 
 
-def load_guider_index(index_csv: Path = GUIDER_DIR) -> pd.DataFrame:
+def load_guider_index(index_csv: Path = GUIDER_PATH) -> pd.DataFrame:
     """Loads the guider index CSV file into a pandas DataFrame.
     You may provide either the CSV file path or the directory containing it.
     """

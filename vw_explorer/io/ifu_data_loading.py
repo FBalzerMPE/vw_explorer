@@ -26,7 +26,7 @@ def load_ifu_data(fits_path: Path) -> Tuple[np.ndarray, np.ndarray]:
     xw, yw = 6.0, 300.0  # extraction box width
     kappa = 2.0  # Outlier rejection threshold
 
-    LOGGER.info(f"Reading {fits_path}")
+    LOGGER.debug(f"Reading {fits_path}")
     fiberpos = _get_fiberpos()
 
     img: np.ndarray = fits.getdata(fits_path, ignore_missing_end=True)  # type: ignore

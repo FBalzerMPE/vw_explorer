@@ -7,6 +7,7 @@ from typing import List, Optional, Tuple
 import pandas as pd
 from astropy.io import fits
 
+from ..logger import LOGGER
 from .obs_timeslot import ObsTimeslot
 
 
@@ -226,6 +227,7 @@ class Observation:
                 comments=entry["comments"],
                 dither=actual_dither,
             )
+            obs._update_information(silent=True)
             observations.append(obs)
         return observations
 
@@ -312,3 +314,32 @@ class Observation:
             s += f"  Comments: {self.comments}\n"
         s += f"  Fiducial coords: ({self.fiducial_coords[0]:.1f}, {self.fiducial_coords[1]:.1f})\n"
         return s
+
+    def _update_information(self, silent=True) -> None:
+        """Update the information of the observation from its FITS header."""
+        if not self.fpath.is_file():
+            if not silent:
+                LOGGER.warning(
+                    f"Cannot update observation info, file not found: {self.fpath}"
+                )
+            return
+        header = fits.getheader(self.fpath)
+        self.start_time_ut = datetime.strptime(
+            header.get("DATE-OBS", ""), "%Y-%m-%dT%H:%M:%S.%f"
+        )
+        t_parts = header.get("OBJECT", "Unknown").split("dither")
+        self.target = t_parts[0].strip()
+        if len(t_parts) > 1:
+            try:
+                self.dither = int(t_parts[1].strip())
+            except ValueError:
+                self.dither = 1
+        else:
+            self.dither = 1
+        self.exptime = header.get("EXPTIME", float("nan"))
+        self.focus = header.get("FOCUS", float("nan"))
+        self.timeslot = (
+            None
+            if math.isnan(self.exptime)
+            else ObsTimeslot.from_start_and_time(self.start_time_ut, self.exptime)
+        )
