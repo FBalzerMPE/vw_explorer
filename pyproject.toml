@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vw_explorer"
+version = "0.1.1"
+authors = [
+    { name = "Fabian Balzer", email = "fbalzer@mpe.mpg.de" }
+]
+license = { file = "LICENSE" }
+description = "A tool for exploring and analyzing VW guider data."
+readme = "README.md"
+keywords = ["astronomy", "data analysis", "guider"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "numpy>=1.21",
+    "matplotlib>=3.4",
+    "astropy>=5.0",
+    "pandas>=1.3",
+]
+
+[project.scripts]
+vw_quicklook = "vw_explorer.scripts.vw_quicklook:main"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]

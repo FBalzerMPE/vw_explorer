@@ -1,0 +1,30 @@
+# Inward-facing ticks on all sides
+# Turn on ticks on all sides
+xtick.top: True
+xtick.bottom: True
+ytick.left: True
+ytick.right: True
+
+# Make ticks point inward
+xtick.direction: in
+ytick.direction: in
+
+# Show minor ticks for finer control (optional)
+xtick.minor.visible: True
+ytick.minor.visible: True
+
+# Tick sizes and widths
+xtick.major.size: 6
+ytick.major.size: 6
+xtick.minor.size: 3
+ytick.minor.size: 3
+xtick.major.width: 1.0
+ytick.major.width: 1.0
+xtick.minor.width: 0.8
+ytick.minor.width: 0.8
+xtick.major.pad: 3.0
+ytick.major.pad: 3.0
+
+# Optional aesthetics
+axes.linewidth: 1.0
+savefig.bbox: tight
