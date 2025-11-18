@@ -50,7 +50,7 @@ def _parse_obs_logfile(
             except AssertionError as e:
                 LOGGER.error(f"Could not parse line {i}:\n\t[{e}]\n\t{line.strip()}")
                 continue
-    return sorted(observations, key=lambda x: x.start_time_ut_noted)
+    return sorted(observations, key=lambda x: x.start_time_ut)
 
 
 def load_observations(

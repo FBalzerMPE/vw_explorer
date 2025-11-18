@@ -24,7 +24,7 @@ class ObservationSequence:
                 obs.target for obs in self.observations if obs.target not in CALIB_NAMES
             )
         )
-        self.observations.sort(key=lambda x: x.start_time_ut_noted)
+        self.observations.sort(key=lambda x: x.start_time_ut)
 
     def __len__(self) -> int:
         return len(self.observations)
@@ -42,8 +42,8 @@ class ObservationSequence:
         """Provide a summary string for a list of observations."""
         obs = self.observations
         earliest, latest = (
-            min(obs.start_time_ut_noted for obs in obs),
-            max(obs.start_time_ut_noted for obs in obs),
+            min(obs.start_time_ut for obs in obs),
+            max(obs.start_time_ut for obs in obs),
         )
         num_obs = len(obs)
         target_counts = Counter(obs.target for obs in obs)
@@ -107,9 +107,9 @@ class ObservationSequence:
         target_obs = [obs for obs in observations if obs.target == target]
         assert target_obs, f"No observations found for target '{target}'."
         if start is not None:
-            target_obs = [obs for obs in target_obs if obs.start_time_ut_noted >= start]
+            target_obs = [obs for obs in target_obs if obs.start_time_ut >= start]
         if end is not None:
-            target_obs = [obs for obs in target_obs if obs.start_time_ut_noted <= end]
+            target_obs = [obs for obs in target_obs if obs.start_time_ut <= end]
         assert (
             target_obs
         ), f"No observations found for target '{target}' in the specified time range."

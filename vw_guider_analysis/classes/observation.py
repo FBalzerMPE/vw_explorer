@@ -123,7 +123,7 @@ class Observation:
     """
     fpath: Path
     """Path to the observation file."""
-    start_time_ut_noted: datetime
+    start_time_ut: datetime
     """UT start time of the observation as noted in the observer log."""
     target: str
     """Target of the observation."""
@@ -131,7 +131,7 @@ class Observation:
     """Exposure time of the observation in seconds."""
     focus: float
     """Focus value of the observation."""
-    fwhm: float
+    fwhm_noted: float
     """Full width at half maximum (FWHM) in arcseconds noted during observation."""
     fiducial_coords: Tuple[float, float]
     """Fiducial coordinates at guider in pixels (x, y)."""
@@ -149,7 +149,38 @@ class Observation:
         self.timeslot = (
             None
             if math.isnan(self.exptime)
-            else ObsTimeslot.from_start_and_time(self.start_time_ut_noted, self.exptime)
+            else ObsTimeslot.from_start_and_time(self.start_time_ut, self.exptime)
+        )
+
+    @classmethod
+    def from_fits(
+        cls, fpath: Path, fid_x: float = float("nan"), fid_y: float = float("nan")
+    ) -> "Observation":
+        """Creates an Observation instance from a FITS file."""
+        assert fpath.is_file(), f"FITS file not found: {fpath}"
+        header = fits.getheader(fpath)  # type: ignore
+        filename = fpath.stem
+        start_time_str = header.get("DATE-OBS", "")
+        start_time = datetime.strptime(start_time_str, "%Y-%m-%dT%H:%M:%S.%f")
+        t_parts = header.get("OBJECT", "Unknown").split("dither")
+        target = t_parts[0].strip()
+        dither = int(t_parts[1].strip()) if len(t_parts) > 1 else 1
+        exptime = header.get("EXPTIME", float("nan"))
+        focus = header.get("FOCUS", float("nan"))
+        airmass = header.get("AIRMASS", float("nan"))
+
+        return cls(
+            filename=filename,
+            fpath=fpath,
+            start_time_ut=start_time,
+            target=target,
+            exptime=exptime,
+            focus=focus,
+            fwhm_noted=float("nan"),
+            fiducial_coords=(fid_x, fid_y),
+            airmass_noted=airmass,
+            comments=header.get("COMMENT", ""),
+            dither=dither,
         )
 
     @staticmethod
@@ -184,11 +215,11 @@ class Observation:
             obs = Observation(
                 filename=fname,
                 fpath=fpath,
-                start_time_ut_noted=start_time,
+                start_time_ut=start_time,
                 target=target,
                 exptime=exptime,
                 focus=entry["focus"],
-                fwhm=entry["FWHM"],
+                fwhm_noted=entry["FWHM"],
                 fiducial_coords=entry["fiducial"],
                 airmass_noted=entry["AM"],
                 comments=entry["comments"],
@@ -203,15 +234,15 @@ class Observation:
         # Parse files, which are usually saved as string representations of lists
         fname = series["filename"]
         fpath = Path(series["fpath"])
-        time = datetime.fromisoformat(series["start_time_ut_noted"])
+        time = datetime.fromisoformat(series["start_time_ut"])
         return cls(
             filename=fname,
             fpath=fpath,
-            start_time_ut_noted=time,
+            start_time_ut=time,
             target=series["target"],
             exptime=series["exptime"],
             focus=series["focus"],
-            fwhm=series["fwhm"],
+            fwhm_noted=series["fwhm_noted"],
             fiducial_coords=(series["fiducial_x"], series["fiducial_y"]),
             airmass_noted=series["airmass_noted"],
             comments=series["comments"],
@@ -229,10 +260,10 @@ class Observation:
                     "fpath": str(obs.fpath),
                     "dither": obs.dither,
                     "target": obs.target,
-                    "start_time_ut_noted": obs.start_time_ut_noted,
+                    "start_time_ut": obs.start_time_ut,
                     "exptime": obs.exptime,
                     "focus": obs.focus,
-                    "fwhm": obs.fwhm,
+                    "fwhm_noted": obs.fwhm_noted,
                     "fiducial_x": obs.fiducial_coords[0],
                     "fiducial_y": obs.fiducial_coords[1],
                     "airmass_noted": obs.airmass_noted,
@@ -251,7 +282,7 @@ class Observation:
 
     @property
     def long_name(self) -> str:
-        s = f"{self.target} ({self.filename}, {self.start_time_ut_noted.strftime('%Y-%m-%d %H:%M:%S UT')}, dither {self.dither})"
+        s = f"{self.target} ({self.filename}, {self.start_time_ut.strftime('%Y-%m-%d %H:%M:%S UT')}, dither {self.dither})"
         return s
 
     @property
@@ -270,10 +301,10 @@ class Observation:
         if self.timeslot:
             s += f"  Time slot: {self.timeslot.summary}\n"
         else:
-            s += f"  Start time (UT): {self.start_time_ut_noted.isoformat()}\n"
+            s += f"  Start time (UT): {self.start_time_ut.isoformat()}\n"
         if self.is_sky_obs:
             s += f"  Airmass: {self.airmass_noted:.2f}\n"
-            s += f"  FWHM: {self.fwhm:.2f} arcsec\n"
+            s += f"  FWHM: {self.fwhm_noted:.2f} arcsec\n"
         if not math.isnan(self.exptime):
             s += f"  Exposure time per frame: {self.exptime:.1f} s\n"
         if self.comments:

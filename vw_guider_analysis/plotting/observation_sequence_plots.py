@@ -42,7 +42,7 @@ def plot_guider_sequence_summary(oseq: ObservationSequence):
         LOGGER.error("Guider sequences not loaded. Call load_guider_sequences() first.")
         return
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))
-    t = f"{oseq.targets[0]} ({len(oseq)}), start: {oseq.observations[0].start_time_ut_noted.strftime('%Y-%m-%d %H:%M')}"
+    t = f"{oseq.targets[0]} ({len(oseq)}), start: {oseq.observations[0].start_time_ut.strftime('%Y-%m-%d %H:%M')}"
     fig.suptitle(t)
     _plot_combined_centroids(gseq, ax1)
     _plot_fwhm_sequence(gseq, ax2)
