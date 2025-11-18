@@ -92,6 +92,17 @@ def _parse_float(s: str) -> float:
         raise AssertionError(f"Could not convert '{s}' to float.") from e
 
 
+def _try_find_file(fname: str, base_datapath: Optional[Path] = None) -> Path:
+    if base_datapath is None:
+        return Path(fname).with_suffix(".fits")
+    # Walk the base datapath to find the file
+    avail = list(base_datapath.glob("**/" + fname + ".fits"))
+    if avail:
+        assert len(avail) == 1, f"Multiple files found for {fname} in {base_datapath}."
+        return avail[0]
+    return (base_datapath / fname).with_suffix(".fits")
+
+
 _EXPECTED_COLS = {
     "files": _sanitize_fnames,
     "UT": _sanitize_start_time,
@@ -164,8 +175,7 @@ class Observation:
         exptime = entry["exptime"]
         observations = []
         for i, fname in enumerate(entry["files"]):
-            fpath = (base_datapath / fname) if base_datapath else Path(fname)
-            fpath = fpath.with_suffix(".fits")
+            fpath = _try_find_file(fname, base_datapath)
             actual_dither = dither + i
             start_time = datetime.combine(date, entry["UT"])
             if not math.isnan(exptime):
@@ -247,6 +257,11 @@ class Observation:
     @property
     def is_sky_obs(self) -> bool:
         return not math.isnan(self.airmass_noted)
+
+    @property
+    def file_available(self) -> bool:
+        """Checks if the observation file exists."""
+        return self.fpath.is_file()
 
     @property
     def summary(self) -> str:

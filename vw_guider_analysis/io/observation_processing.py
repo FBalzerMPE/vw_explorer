@@ -34,14 +34,14 @@ def process_observations(
             )
             continue
         fig, axes = plt.subplots(1, 2, figsize=(10, 5))
-        g.plot_positions("fiducial", ax=axes[0])
+        g.plot_centroid_positions("fiducial", ax=axes[0])
         g.plot_fwhm_timeseries(ax=axes[1])
         fig.suptitle(f"Observation: {obs.long_name}", fontsize=16)
         opath = workdir / f"{obs.filename}_summary.png"
         fig.savefig(str(opath), dpi=150, bbox_inches="tight")
         plt.close(fig)
         seqs.append(g)
-    seqs_df = GuiderSequence.to_dataframe(seqs)
+    seqs_df = GuiderSequence.get_combined_stats_df(seqs)
     final_df = obs_df.merge(seqs_df, on="uid", how="left")
     final_df.to_csv(outpath, index=False)
     return final_df

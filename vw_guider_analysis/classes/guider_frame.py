@@ -5,6 +5,7 @@ from typing import Tuple
 
 import numpy as np
 import pandas as pd
+from math import isnan
 from astropy.io import fits
 
 from ..constants import DATA_DIR, GUIDER_DIR
@@ -63,6 +64,8 @@ class GuiderFrame:
     ) -> "GuideStarModel":
         """Fits a 2D Gaussian to a cutout around the specified center."""
         cutout = self.get_cutout(x_cent_in, y_cent_in, size)
+        x_cent_in += 1  # FITS to numpy index correction
+        y_cent_in += 1  # FITS to numpy index correction
         return GuideStarModel(
             inupt_data=cutout,
             x_cent_in=x_cent_in,

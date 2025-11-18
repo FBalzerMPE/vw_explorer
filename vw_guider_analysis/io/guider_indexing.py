@@ -30,7 +30,7 @@ def create_guider_index(
         old_index_df = pd.read_csv(output_csv)
         if not silent:
             LOGGER.info(
-                f"Reading existing index with {len(old_index_df)} rows from {output_csv}"
+                f"Reading existing guider index with {len(old_index_df)} rows from {output_csv}"
             )
         if remove_nonexistent:
             # Remove entries for files that no longer exist
@@ -56,7 +56,7 @@ def create_guider_index(
         files = [f for f in files if str(f) not in prev_files]
     if len(files) == 0:
         if not silent:
-            LOGGER.info("No new files to index, skipping operation.")
+            LOGGER.info("No new files to index for guider index, skipping operation.")
         return
     if not silent:
         LOGGER.info(f"Found {len(files)} new files to index in {guider_dir}")

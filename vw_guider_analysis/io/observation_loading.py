@@ -55,7 +55,7 @@ def _parse_obs_logfile(
 
 def load_observations(
     logfile_path: Optional[Path] = None,
-    base_datapath: Optional[Path] = None,
+    base_datapath: Optional[Path] = DATA_DIR / "observations",
     backup_path=DATA_DIR / "observations_raw.csv",
     reload_from_log: bool = False,
 ) -> List["Observation"]:
@@ -84,30 +84,3 @@ def load_observations(
     obs_df.to_csv(backup_path, index=False)
     LOGGER.info(f"Saved parsed {len(obs)} observations to backup CSV at {backup_path}.")
     return obs
-
-
-def get_observation_summary(observations: List["Observation"]) -> str:
-    """Provides a summary string for a list of observations."""
-    earliest, latest = (
-        min(obs.start_time_ut_noted for obs in observations),
-        max(obs.start_time_ut_noted for obs in observations),
-    )
-    num_obs = len(observations)
-    target_counts = Counter(obs.target for obs in observations)
-    science_targets = {k: v for k, v in target_counts.items() if k not in CALIB_NAMES}
-    science_targets = dict(sorted(science_targets.items(), key=lambda item: item[0]))
-    calib_targets = {k: v for k, v in target_counts.items() if k in CALIB_NAMES}
-
-    summary = (
-        f"Observation Log Summary:\n"
-        f"  Time Range:\n    {earliest} to\n    {latest}\n"
-        f"  Total Observations: {num_obs}\n"
-        f"  Target Counts for {len(science_targets)} unique targets:\n"
-    )
-    for target, count in science_targets.items():
-        if target in CALIB_NAMES:
-            continue
-        summary += f"    {target + ':':<10} {count}\n"
-    num_calibs = sum(calib_targets.values())
-    summary += f"  Calibration Observations: {num_calibs}\n"
-    return summary

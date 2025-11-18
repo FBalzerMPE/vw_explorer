@@ -13,8 +13,10 @@ A representation of these is then saved as a .csv file within the DATAPATH.
 ```python
 import vw_guider_analysis as vwg
 observations = vwg.load_observations(logfile_path="YOUR_PATH/log.txt")
-# Print a summary of the run:
-print(vwg.get_observation_summary(observations))
+# Generate a sequence object
+obs_sequence = vwg.ObservationSequence(observations)
+# Print a summary of the sequence
+print(obs_sequence)
 ```
 
 ### Guider Frame analysis
