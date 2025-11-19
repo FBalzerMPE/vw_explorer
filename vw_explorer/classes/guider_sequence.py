@@ -1,9 +1,10 @@
 from dataclasses import dataclass, field
 from math import isnan
-from typing import List, Literal, Optional, Tuple
+from typing import List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
+from typing_extensions import Literal
 
 from ..calculations import get_clipped_mask, get_clipped_mask_by_distance
 from .guider_frame import GuiderFrame

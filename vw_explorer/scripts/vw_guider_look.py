@@ -1,5 +1,6 @@
 import argparse
 from pathlib import Path
+from typing import Tuple
 
 from vw_explorer.classes import ObservationSequence
 from vw_explorer.display.multi_file_plot import MultiFilePlotter
@@ -37,7 +38,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def _parse_fiducial_coords(coord_str: str) -> tuple[float, float]:
+def _parse_fiducial_coords(coord_str: str) -> Tuple[float, float]:
     try:
         x_str, y_str = coord_str.split(",")
         x, y = float(x_str.strip()), float(y_str.strip())

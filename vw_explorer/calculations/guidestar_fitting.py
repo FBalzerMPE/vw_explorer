@@ -120,7 +120,8 @@ def fit_guide_star(
     mask = np.isfinite(sub)
     fitter = fitting.LevMarLSQFitter()
     fitted = fitter(model, xgrid[mask], ygrid[mask], sub[mask], maxiter=200)
-    if (fit_info := getattr(fitter, "fit_info", None)) is not None:
+    fit_info = getattr(fitter, "fit_info", None)
+    if fit_info is not None:
         fitted.fit_info = fit_info
 
     fitted.x_mean_0 += x_min  # type: ignore

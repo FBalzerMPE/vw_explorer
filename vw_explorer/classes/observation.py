@@ -12,7 +12,7 @@ from ..logger import LOGGER
 from .obs_timeslot import ObsTimeslot
 
 
-def _sanitize_fnames(f_in: str) -> list[str]:
+def _sanitize_fnames(f_in: str) -> List[str]:
     assert f_in.startswith("vw"), f"Filename {f_in} does not start with 'vw'."
     return parse_vw_filenames(f_in)
 

@@ -16,7 +16,7 @@ class ObservationSequence:
     """Represents a sequence of observations for analysis."""
 
     observations: List[Observation] = field(repr=False)
-    targets: list[str] = field(init=False)
+    targets: List[str] = field(init=False)
     guider_sequences: Optional[List[GuiderSequence]] = field(default=None, repr=False)
 
     def __post_init__(self):

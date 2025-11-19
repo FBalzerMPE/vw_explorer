@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional
+from typing import Dict, Optional
 
 import yaml
 
@@ -43,7 +43,7 @@ def sanitize_path(path: str) -> Path:
 
 def load_config(
     config_path: Optional[Path] = None, validate: bool = True
-) -> dict[str, dict]:
+) -> Dict[str, Dict]:
     """
     Loads the configuration file.
     """

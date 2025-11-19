@@ -1,11 +1,12 @@
 import os
 from pathlib import Path
-from typing import Iterable, Literal, Optional, Union
+from typing import Iterable, Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.figure import Figure
 from PIL import Image
+from typing_extensions import Literal
 
 from ..calculations import get_clipped_mask, get_clipped_mask_by_distance
 from ..classes.guider_sequence import GuiderSequence
@@ -30,7 +31,7 @@ def create_guider_gif(
     seq: GuiderSequence,
     out_path: Union[Path, str],
     fps: int = 5,
-    figsize: tuple[float, float] = (12, 4),
+    figsize: Tuple[float, float] = (12, 4),
     dpi: int = 100,
     frames: Optional[Iterable[int]] = None,
     close_fig: bool = True,
