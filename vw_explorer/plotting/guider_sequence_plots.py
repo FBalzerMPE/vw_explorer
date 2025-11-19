@@ -82,6 +82,7 @@ def plot_centroid_positions(
     annotate_mean: bool = True,
     separate_outliers: bool = True,
     set_limits: bool = True,
+    dither: Optional[int] = None,
     **scatter_kwargs,
 ) -> plt.Axes:
     """Scatter plot of fitted centroids from a GuiderSequence.
@@ -193,6 +194,16 @@ def plot_centroid_positions(
         capsize=4,
         label="Mean ± Stddev",
     )
+    if dither is not None:
+        ax.text(
+            mean_x,
+            mean_y,
+            f"D{dither}",
+            # transform=ax.transAxes,
+            ha="left",
+            va="top",
+            color="k",
+        )
     return ax
 
 

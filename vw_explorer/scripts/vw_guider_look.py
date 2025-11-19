@@ -1,14 +1,19 @@
 import argparse
 from pathlib import Path
 
+from vw_explorer.classes import ObservationSequence
 from vw_explorer.display.multi_file_plot import MultiFilePlotter
-from vw_explorer.io import infer_vw_filenames, load_ifu_data
+from vw_explorer.io import infer_vw_filenames
 from vw_explorer.logger import LOGGER
-from vw_explorer.plotting import plot_ifu_data
 
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Quicklook for VIRUS-W IFU images.")
+    parser.add_argument(
+        "fiducial_coords",
+        type=str,
+        help="Fiducial coordinates for the guider in the format 'x,y' (e.g., '512.1,512').",
+    )
     parser.add_argument(
         "fpaths",
         type=str,
@@ -32,17 +37,31 @@ def parse_args():
     return parser.parse_args()
 
 
+def _parse_fiducial_coords(coord_str: str) -> tuple[float, float]:
+    try:
+        x_str, y_str = coord_str.split(",")
+        x, y = float(x_str.strip()), float(y_str.strip())
+        return x, y
+    except Exception as e:
+        raise ValueError(
+            f"Invalid fiducial coordinates format: '{coord_str}'. Expected format is 'x,y'."
+        ) from e
+
+
 def main():
     args = parse_args()
     LOGGER.setLevel(args.loglevel.upper())
     filepaths = infer_vw_filenames(args.fpaths)
     LOGGER.info(f"Found {len(filepaths)} file(s).")
+    fid_x, fid_y = _parse_fiducial_coords(args.fiducial_coords)
+    seq = ObservationSequence.from_filenames(filepaths)
+    for obs in seq.observations:
+        obs.fiducial_coords = (fid_x, fid_y)
+    LOGGER.info(f"Observation Sequence Summary:\n{seq}")
+    seq.plot_summary()
+    import matplotlib.pyplot as plt
 
-    def plot_ifu(fpath: Path):
-        fiberpos, flux = load_ifu_data(fpath)
-        plot_ifu_data(fiberpos, flux, "", cmap=args.cmap)
-
-    MultiFilePlotter(filepaths, plot_ifu).show()
+    plt.show()
 
 
 if __name__ == "__main__":

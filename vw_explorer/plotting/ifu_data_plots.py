@@ -1,17 +1,27 @@
+from typing import Optional
 import matplotlib.cm as cm
+from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
 import numpy as np
 from matplotlib.colors import Normalize
 
 
-def plot_ifu_data(fiberpos: np.ndarray, flux: np.ndarray, title: str, **kwargs):
+def plot_ifu_data(
+    fiberpos: np.ndarray,
+    flux: np.ndarray,
+    title: str,
+    ax: Optional[Axes] = None,
+    **kwargs,
+):
     flux[flux <= 0.0] = 0.1
     flux = np.log(flux + 0.1)
     vmin, vmax = min(flux), max(flux)
     norm = Normalize(vmin=vmin, vmax=vmax)
     color = norm(flux)
-
-    fig, ax = plt.subplots(figsize=(6, 3.3))
+    ax = ax if ax is not None else plt.gca()
+    fig = ax.figure
+    fig.set_size_inches(6, 3.33)
     fig.suptitle(title, ha="center")
     ax.set_position([0.15, 0.15, 0.75, 0.75])  # type: ignore
     kwargs.setdefault("marker", "h")

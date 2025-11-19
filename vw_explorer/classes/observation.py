@@ -7,30 +7,14 @@ from typing import List, Optional, Tuple
 import pandas as pd
 from astropy.io import fits
 
+from ..io import parse_vw_filenames
 from ..logger import LOGGER
 from .obs_timeslot import ObsTimeslot
 
 
 def _sanitize_fnames(f_in: str) -> list[str]:
-    """Parse the given filename string, which may contain a range indicated by a hyphen.
-    Returns a list of individual filenames.
-    Examples:
-        "vw004123-125" -> ["vw004123", "vw004124", "vw004125"]
-        "vw004200" -> ["vw004200"]
-        "vw001432-34" -> ["vw001432", "vw001433", "vw001434"]
-    """
     assert f_in.startswith("vw"), f"Filename {f_in} does not start with 'vw'."
-    if "-" not in f_in:
-        return [f_in]
-    main = f_in.split("-")[0]
-    num_start = int(main[2:])
-    num_end = int(f_in.split("-")[1])
-    # Only relevant digits are replaced
-    num_end_digits = len(str(num_end))
-    num_start_part = str(num_start)[:-num_end_digits]
-    num_end = int(f"{num_start_part}{num_end}")
-    assert num_start < num_end, f"Invalid file range: {f_in}"
-    return [f"vw{n:0>6}" for n in range(num_start, num_end + 1)]
+    return parse_vw_filenames(f_in)
 
 
 def _sanitize_start_time(ut_str: str) -> time:
@@ -166,7 +150,7 @@ class Observation:
         start_time = datetime.strptime(start_time_str, "%Y-%m-%dT%H:%M:%S.%f")
         t_parts = header.get("OBJECT", "Unknown").split("dither")
         target = t_parts[0].strip()
-        dither = int(t_parts[1].strip()) if len(t_parts) > 1 else 1
+        dither = int(t_parts[1].strip()) + 1 if len(t_parts) > 1 else 1
         exptime = header.get("EXPTIME", float("nan"))
         focus = header.get("FOCUS", float("nan"))
         airmass = header.get("AIRMASS", float("nan"))
@@ -331,7 +315,7 @@ class Observation:
         self.target = t_parts[0].strip()
         if len(t_parts) > 1:
             try:
-                self.dither = int(t_parts[1].strip())
+                self.dither = int(t_parts[1].strip()) + 1
             except ValueError:
                 self.dither = 1
         else:

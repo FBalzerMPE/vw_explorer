@@ -27,12 +27,21 @@ def _plot_fwhm_sequence(gseq: List[GuiderSequence], ax: Optional[Axes] = None):
     ax.set_ylim(0, ymax)
 
 
-def _plot_combined_centroids(gseq: List[GuiderSequence], ax: Optional[Axes] = None):
+def _plot_combined_centroids(
+    gseq: List[GuiderSequence],
+    ax: Optional[Axes] = None,
+    dithers: Optional[List[int]] = None,
+):
     ax = ax if ax is not None else plt.gca()
     for i, s in enumerate(gseq):
         color = plt.cm.tab10(i % 6)  # type: ignore
         s.plot_centroid_positions(
-            "origin", ax=ax, set_limits=False, color=color, alpha=0.5
+            "origin",
+            ax=ax,
+            set_limits=False,
+            color=color,
+            alpha=0.5,
+            dither=dithers[i] if dithers else None,
         )
 
 
@@ -44,6 +53,7 @@ def plot_guider_sequence_summary(oseq: ObservationSequence):
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))
     t = f"{oseq.targets[0]} ({len(oseq)}), start: {oseq.observations[0].start_time_ut.strftime('%Y-%m-%d %H:%M')}"
     fig.suptitle(t)
-    _plot_combined_centroids(gseq, ax1)
+    dithers = [obs.dither for obs in oseq.observations]
+    _plot_combined_centroids(gseq, ax1, dithers)
     _plot_fwhm_sequence(gseq, ax2)
     fig.tight_layout(rect=[0, 0.03, 1, 0.95])  # type: ignore

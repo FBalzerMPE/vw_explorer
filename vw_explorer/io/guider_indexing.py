@@ -22,6 +22,8 @@ def create_guider_index(
     assert GUIDER_PATH.exists(), f"Guider directory {GUIDER_PATH} does not exist."
     if output_csv is None:
         output_csv = GUIDER_PATH / "guider_index.csv"
+    if output_csv.is_dir():
+        output_csv = output_csv / "guider_index.csv"
     assert output_csv.suffix == ".csv", "Output file must have a .csv extension."
     old_index_df: Optional[pd.DataFrame] = None
     if output_csv.exists():

@@ -1,6 +1,7 @@
 from collections import Counter
 from dataclasses import dataclass, field
 from datetime import datetime
+from pathlib import Path
 from typing import List, Optional
 
 from ..calculations import get_target_counts
@@ -78,22 +79,18 @@ class ObservationSequence:
             summary += f"  Calibration Observations: {num_calibs}\n"
         return summary
 
-    @property
-    def is_single_target(self) -> bool:
-        """Returns True if the sequence contains observations for a single target."""
-        return len(self.targets) == 1
-
-    @property
-    def is_single_dither_chunk(self) -> bool:
-        """Returns True if the sequence contains observations forming a single dither chunk for its target."""
-        if not self.is_single_target:
-            return False
-        dither_values = [obs.dither for obs in self.observations]
-        # assert whether the differences between consecutive dithers are all 1
-        return all(
-            (dither_values[i] - dither_values[i - 1] == 1)
-            for i in range(1, len(dither_values))
-        )
+    @classmethod
+    def from_filenames(cls, filenames: List[Path]) -> "ObservationSequence":
+        """Creates an ObservationSequence from a list of filenames."""
+        observations = []
+        for fname in filenames:
+            try:
+                obs = Observation.from_fits(fname)
+                observations.append(obs)
+            except ValueError as e:
+                LOGGER.warning(f"Skipping file '{fname}' due to error: {e}")
+        assert observations, "No valid observations found from the provided filenames."
+        return cls(observations=observations)
 
     @classmethod
     def from_target(
@@ -114,6 +111,23 @@ class ObservationSequence:
             target_obs
         ), f"No observations found for target '{target}' in the specified time range."
         return cls(observations=target_obs)
+
+    @property
+    def is_single_target(self) -> bool:
+        """Returns True if the sequence contains observations for a single target."""
+        return len(self.targets) == 1
+
+    @property
+    def is_single_dither_chunk(self) -> bool:
+        """Returns True if the sequence contains observations forming a single dither chunk for its target."""
+        if not self.is_single_target:
+            return False
+        dither_values = [obs.dither for obs in self.observations]
+        # assert whether the differences between consecutive dithers are all 1
+        return all(
+            (dither_values[i] - dither_values[i - 1] == 1)
+            for i in range(1, len(dither_values))
+        )
 
     def get_dither_chunk(
         self, chunk_index: int = 0, target_name: Optional[str] = None
@@ -182,3 +196,4 @@ class ObservationSequence:
 
         if self.guider_sequences is None:
             self.load_guider_sequences()
+        plot_guider_sequence_summary(self)

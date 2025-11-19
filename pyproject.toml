@@ -4,11 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "vw_explorer"
-version = "0.1.1"
+version = "0.1.2"
 authors = [
     { name = "Fabian Balzer", email = "fbalzer@mpe.mpg.de" }
 ]
-license = { file = "LICENSE" }
+license-files = ["LICENSE"]
 description = "A tool for exploring and analyzing VW guider data."
 readme = "README.md"
 keywords = ["astronomy", "data analysis", "guider"]
@@ -27,9 +27,10 @@ dependencies = [
 
 [project.scripts]
 vw_quicklook = "vw_explorer.scripts.vw_quicklook:main"
+vw_guider_look = "vw_explorer.scripts.vw_guider_look:main"
 
 [tool.setuptools]
 include-package-data = true
 
 [tool.setuptools.packages.find]
-where = ["src"]
+where = ["vw_explorer"]
