@@ -3,7 +3,7 @@
 from pathlib import Path
 
 import toml
-from setuptools import setup
+from setuptools import find_packages, setup
 
 
 def load_pyproject_metadata():
@@ -35,6 +35,7 @@ def load_pyproject_metadata():
 metadata = load_pyproject_metadata()
 
 setup(
-    packages=["vw_explorer"],
+    packages=find_packages(),
+    package_data={"vw_explorer": ["assets/*", "scripts/*"]},
     **metadata,
 )

@@ -4,7 +4,7 @@ from .setup import CONFIG
 
 GUIDER_PIXSCALE = 0.533
 """The pixel scale of the VW guider camera in arcseconds per pixel."""
-ROOT_DIR = Path(__file__).parent.parent
+ROOT_DIR = Path(__file__).parent
 ASSET_PATH = ROOT_DIR / "assets"
 DATA_PATH = Path(CONFIG["paths"]["data_dir"])
 """The path to the data directory."""

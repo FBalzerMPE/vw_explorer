@@ -3,7 +3,7 @@ from typing import Optional
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.axes import Axes
-from matplotlib.colors import LogNorm, TwoSlopeNorm
+from matplotlib.colors import LogNorm
 from matplotlib.figure import Figure
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
@@ -72,7 +72,14 @@ def plot_guidefit_model(
     # Residuals
     residuals = cutout_data - fitted_data
     m = np.nanmax(np.abs(residuals))
-    norm = TwoSlopeNorm(vcenter=0.0, vmin=-m, vmax=m)
+    try:
+        from matplotlib.colors import TwoSlopeNorm
+
+        norm = TwoSlopeNorm(vcenter=0.0, vmin=-m, vmax=m)
+    except ImportError:
+        from matplotlib.colors import Normalize
+
+        norm = Normalize(vmin=-m, vmax=m)
     plot_img_data(residuals, ax=ax3, cmap="RdBu_r", norm=norm, add_cbar=True)
     ax3.set_title("Residuals")
     ax3.axis("off")

@@ -37,4 +37,4 @@ vw_guider_look = "vw_explorer.scripts.vw_guider_look:main"
 include-package-data = true
 
 [tool.setuptools.packages.find]
-where = ["vw_explorer"]
+where = ["."]

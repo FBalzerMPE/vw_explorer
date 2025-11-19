@@ -3,6 +3,12 @@ from typing import Dict, Optional
 
 import yaml
 
+from ..logger import LOGGER
+
+_VWE_DIR = Path.home() / ".vw_explorer"
+_USER_CONFIG_PATH = _VWE_DIR / "config.yml"
+_DEFAULT_CONFIG_PATH = Path(__file__).parent.parent / "assets" / "default_config.yml"
+
 
 def ask_user_confirmation(message: str) -> bool:
     """Asks the user for a yes/no confirmation."""
@@ -26,36 +32,91 @@ def _ask_user_to_create_path(path: Path, key: str) -> bool:
     return False
 
 
+def create_missing_paths(config: dict):
+    """Creates any missing paths specified in the config."""
+    for key, path in config["paths"].items():
+        p = Path(path)
+        if not p.exists():
+            p.mkdir(parents=True, exist_ok=False)
+            LOGGER.info(f"Created missing path for '{key}' at {path}")
+
+
 def validate_config(config: dict):
     for key, path in config["paths"].items():
         if not Path(path).exists():
-            if not _ask_user_to_create_path(Path(path), key):
-                raise FileNotFoundError(
-                    f"Path for '{key}' does not exist: {path}\nEither create it, or change it in the config file (vw_explorer/config.yml)."
-                )
+            raise FileNotFoundError(
+                f"Path for '{key}' does not exist: {path}\nEither create it, or change it in the config file (vw_explorer/config.yml)."
+            )
 
 
 def sanitize_path(path: str) -> Path:
     """Converts a string path to a Path object and resolves it."""
-    path = path.replace(r"{VWE}", str(Path(__file__).parent.parent.parent))
+    path = path.replace(r"{VWE}", str(_VWE_DIR))
     return Path(path).expanduser().resolve()
 
 
-def load_config(
-    config_path: Optional[Path] = None, validate: bool = True
-) -> Dict[str, Dict]:
+def load_config(validate: bool = True) -> Dict[str, Dict]:
     """
     Loads the configuration file.
+
+    Parameters
+    ----------
+    config_path : Optional[Path]
+        Path to the configuration file. If None, the default config file is used.
+    validate : bool
+        Whether to validate the paths in the configuration file.
+
+    Returns
+    -------
+    Dict[str, Dict]
+        The loaded configuration.
     """
-    if config_path is None:
-        config_path = Path(__file__).parent.parent.parent / "config.yml"
-    config_file = Path(config_path)
+    if not _USER_CONFIG_PATH.exists():
+        if not ask_user_confirmation(
+            f"No user configuration file found at {_USER_CONFIG_PATH}.\nWould you like to create a default configuration file there?"
+        ):
+            raise FileNotFoundError(
+                f"Configuration file not found: {_USER_CONFIG_PATH}"
+            )
+        generate_default_config()
+
+    config_file = Path(_USER_CONFIG_PATH)
     if not config_file.exists():
-        raise FileNotFoundError(f"Configuration file not found: {config_path}")
+        raise FileNotFoundError(f"Configuration file not found: {_USER_CONFIG_PATH}")
+
     with open(config_file, "r") as f:
         cfg = yaml.safe_load(f)
+
     for key, path in cfg["paths"].items():
         cfg["paths"][key] = str(sanitize_path(path))
+
     if validate:
-        validate_config(cfg)
+        try:
+            validate_config(cfg)
+        except FileNotFoundError as e:
+            LOGGER.error(e)
+            q = "Would you like to create the necessary directories specified in the config file? Otherwise, first edit the config file to set existing paths."
+            if ask_user_confirmation(q):
+                cfg = load_config(validate=False)
+                create_missing_paths(cfg)
+                validate_config(cfg)
+
     return cfg
+
+
+def generate_default_config():
+    """
+    Generates a default configuration file in the user's home directory.
+    """
+    if not _DEFAULT_CONFIG_PATH.exists():
+        raise FileNotFoundError(
+            f"Default configuration file not found: {_DEFAULT_CONFIG_PATH}"
+        )
+
+    config_path = _USER_CONFIG_PATH
+
+    # Ensure the parent directory exists
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+    # Copy the default configuration to the new location
+    config_path.write_text(_DEFAULT_CONFIG_PATH.read_text())
+    LOGGER.info(f"Default configuration file created at: {config_path}")
