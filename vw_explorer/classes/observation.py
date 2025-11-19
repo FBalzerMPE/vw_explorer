@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import List, Optional, Tuple
 
 import pandas as pd
+from ..util import parse_isoformat
 from astropy.io import fits
 
 from ..io import parse_vw_filenames
@@ -221,7 +222,7 @@ class Observation:
         # Parse files, which are usually saved as string representations of lists
         fname = series["filename"]
         fpath = Path(series["fpath"])
-        time = datetime.fromisoformat(series["start_time_ut"])
+        time = parse_isoformat(series["start_time_ut"])
         return cls(
             filename=fname,
             fpath=fpath,

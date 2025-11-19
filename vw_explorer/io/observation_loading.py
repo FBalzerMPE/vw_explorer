@@ -7,6 +7,7 @@ import pandas as pd
 
 from ..constants import CALIB_NAMES, DATA_PATH
 from ..logger import LOGGER
+from ..util import parse_isoformat
 
 if TYPE_CHECKING:
     from ..classes import Observation
@@ -27,10 +28,10 @@ def _parse_obs_logfile(
     with logfile_path.open("r") as logfile:
         for i, line in enumerate(logfile):
             i += 1  # Line numbers start at 1
-            if line.startswith("202"):
-                date_str = line.strip()
+            if line.startswith("# date: "):
+                date_str = line.strip()[7:]
                 try:
-                    current_date = date.fromisoformat(date_str)
+                    current_date = parse_isoformat(date_str + "T00:00:00").date()
                 except Exception as e:
                     LOGGER.warning(
                         f"Could not parse date from line {i}:\n\t[{e}]\n\t{line.strip()}"

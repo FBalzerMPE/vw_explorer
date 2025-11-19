@@ -8,6 +8,7 @@ from astropy.io import fits
 
 from ..constants import GUIDER_PATH
 from ..logger import LOGGER
+from ..util import parse_isoformat
 
 
 def create_guider_index(
@@ -72,11 +73,10 @@ def create_guider_index(
         try:
             date = hdr["DATE-OBS"]
             time = hdr["UT"]
-            # validate format
-            dt = datetime.fromisoformat(f"{date}T{time}")
+            dt = parse_isoformat(f"{date}T{time}")
             date = dt.date().isoformat()
             time = dt.time().isoformat()
-        except Exception:
+        except Exception as e:
             # fallback: use file modification time
             mdt = datetime.fromtimestamp(f.stat().st_mtime)
             if date is None:
@@ -84,7 +84,7 @@ def create_guider_index(
             if time is None:
                 time = mdt.time().isoformat()
             LOGGER.warning(
-                f"Could not read DATE-OBS/UT from header of {f}. Using file modification time."
+                f"Could not read DATE-OBS/UT from header of {f}. Using file modification time. {e}"
             )
         rows.append({"date": date, "time": time, "fname": str(f)})
     df = pd.DataFrame(rows, columns=["date", "time", "fname"])
