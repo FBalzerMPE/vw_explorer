@@ -1,0 +1,44 @@
+The following log file shows how part of our log file looked like during observations.
+When writing your own, the following things are important:
+- Denote the date before the rows corresponding to it; if the UT noted advances to the next day, put the date string before it.
+- In case all fits files are available, this is not as important as the program will read [date, time, target, dither, exptime, focus, airmass] from the header and replace values.
+- Make sure you don't put any spaces within entries (e.g., fiducial coordinates should be [XXX.x,YYY.y] and not [XXX.x, YYY.y], and targets should contain underscores or hyphens before the dither indicator, and not whitespaces).
+- You may use both tabs and spaces as delimiters.
+- Only lines starting with 'vw' will be parsed as a line describing an observation.
+- During parsing, pay attention to the log messages as those will tell you what went wrong.
+- Any additional lines (other than 'vw' and '# date:') will be ignored.
+- It doesn't matter whether you omit the '-' for comments, but make sure to put them for all other columns.
+
+
+
+
+# date: 20251115
+
+file   	       UT	target				exptime	focus	FWHM	fiducial	AM	comments
+> biases(n=11)
+vw001417-27    22:44:33	biases				-	-	-	-		-	Little stray sunlight in dome in first 5 frames, tried fix
+> autoFocus()
+vw001428-34    22:24:42 autofocus     	   	   	5	24.4	-	-		-	Found focus at 24.36
+> domeflats(5, n=11)
+vw001435-45    23:29:21	domeflats			auto	-	-	-		-	-
+Open dome
+# date: 20251116
+> autotwi('dusk', 5, n=11)
+vw001447-53    00:07:03 twilights			auto	-	-	-		-	terminated after 8 due to getting too dark
+Close dome
+> arcs('NeHg', n=11, exptime=120)
+vw001455-64    00:30:52	arcs				120	-	-	-		-	-
+Open dome
+telescope alignement:
+linear zeroes of 1147.8 and -151.2 arcsec
+no significant change since yesterday, taking testImage to confirm
+> testImage(5)
+# vw001465       01:19:53	test				5	63292	-	-		1.14	
+
+> execute(build_dither_program(targetname='NGC7465', exptime=1200, dodither=[1,1,1,1,1,1], skyexptime=0))
+vw001466       01:35:58 NGC7465_D1		        1200	63292	1.5     322.4,311.9     1.05	-
+vw001467       01:57:14	NGC7465_D2			1200	63292	1.6	327.7,314.7	1.03	TCS software crash on PC, guiding and tracking has continued
+vw001468       02:18:29	NGC7465_D3			1200	63292	1.5	322.4,317.5	1.03	-
+vw001469       02:39:45	NGC7465_D4			1200	63292	1.6	320.9,314.7	1.04	-
+vw001470       03:01:01	NGC7465_D5			1200	63292	1.4	326.2,311.4	1.05	Hint of clouds on timelapse
+vw001471       03:22:17 NGC7465_D6			1200	63292	1.5	326.2,317.7	1.07	-
