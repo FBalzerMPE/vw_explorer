@@ -41,14 +41,14 @@ def _plot_dither_chunk_summary(chunk: DitherChunk, output_path: Path):
     output_path : Path
         Path to save the plot.
     """
-    try:
-        chunk.plot_summary()
-        fig = plt.gca()
-        fig.savefig(str(output_path), dpi=150, bbox_inches="tight")
-        plt.close(fig)
-        LOGGER.info(f"Saved dither chunk summary plot to {output_path}")
-    except Exception as e:
-        LOGGER.warning(f"Error generating dither chunk summary plot: {e}")
+# try:
+    chunk.plot_summary()
+    fig = plt.gca()
+    fig.savefig(str(output_path), dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    LOGGER.info(f"Saved dither chunk summary plot to {output_path}")
+# except Exception as e:
+    LOGGER.warning(f"Error generating dither chunk summary plot: {e}")
 
 def generate_dither_chunk_plots(
     dither_chunks: List["DitherChunk"],
@@ -76,6 +76,6 @@ def generate_dither_chunk_plots(
         for gseq in chunk.obs_seq.get_guider_sequences():
             plot_path = obs_plot_dir / f"{gseq.observation.filename}_summary.png"
             _plot_guider_sequence(gseq, plot_path)
-        chunk_plot_path = dither_chunk_dir / f"dither_chunk_{chunk.chunk_index}_summary.png"
+        chunk_plot_path = dither_chunk_dir / f"dither_chunk_{chunk.target}_{chunk.chunk_index}_summary.png"
         _plot_dither_chunk_summary(chunk, chunk_plot_path)
 

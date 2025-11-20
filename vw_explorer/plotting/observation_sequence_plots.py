@@ -5,6 +5,8 @@ import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.gridspec import GridSpec
 
+from vw_explorer.classes.dither_chunk import DitherChunk
+
 from ..classes import GuiderSequence, Observation, ObservationSequence
 from ..logger import LOGGER
 
@@ -53,7 +55,8 @@ def _plot_fwhm_sequence(
     ax.set_ylabel("FWHM (arcsec)")
     ax.set_title("FWHM")
     t_labels = [st.strftime("%H:%M:%S") for st in mid_times]
-    ax.set_xticks(mid_times, labels=t_labels, rotation=45, ha="right")
+    ax.set_xticks(mid_times)
+    ax.set_xticklabels(t_labels, rotation=45, ha="right")  
     ax.legend(loc="lower left")
     ymax = max(1.05 * np.nanmax(fwhms[:, 0]), 3)
     ax.set_ylim(0, ymax)
@@ -87,7 +90,8 @@ def _plot_amplitude_sequence(
     ax.set_ylabel("Amplitude (a.u.)")
     ax.set_title("Amplitude of guide star fit")
     t_labels = [st.strftime("%H:%M:%S") for st in mid_times]
-    ax.set_xticks(mid_times, labels=t_labels, rotation=45, ha="right")
+    ax.set_xticks(mid_times)
+    ax.set_xticklabels(t_labels, rotation=45, ha="right")  
     ax.legend(loc="lower left")
     ymax = 1.1 * np.nanpercentile(all_amplitudes, 98)
     ax.set_ylim(0, ymax)
@@ -126,6 +130,15 @@ def _plot_combined_centroids(
         )
     _symmetrize_axis_limits(ax, 10)
 
+def _set_am_limits(ax: Axes, am_values: List[float]):
+    """Set y-limits for airmass plot with some padding."""
+    am_min = min(am_values)
+    am_max = max(am_values)
+    height = max(am_max - am_min, 0.1)
+    y_padding = 0.2 * height
+    ymin = max(1.0, min(am_min - y_padding, am_min * 0.95))
+    ymax = max(am_max + y_padding, am_max * 1.05)
+    ax.set_ylim(ymin, ymax)
 
 def _plot_airmass_series(
         oseq: ObservationSequence,
@@ -139,27 +152,28 @@ def _plot_airmass_series(
     ax.set_ylabel("Airmass")
     ax.set_title("Airmass")
     t_labels = [st.strftime("%H:%M:%S") for st in mid_times]
-    ax.set_xticks(mid_times, labels=t_labels, rotation=45, ha="right")  
-    ax.set_ylim(0, 2)
-    # Annotate start and stop
-    print(am)
-    ax.text(0.02, 0.2, f"{am[0]:.2f}", va="bottom", ha="left", color="purple", transform=ax.transAxes)
-    ax.text(0.98, 0.2, f"{am[-1]:.2f}", va="bottom", ha="right", color="purple", transform=ax.transAxes)
+    ax.set_xticks(mid_times)
+    ax.set_xticklabels(t_labels, rotation=45, ha="right")
+    _set_am_limits(ax, am)
+    ax.text(0.02, 0.02, f"{am[0]:.2f}", va="bottom", ha="left", color="purple", transform=ax.transAxes)
+    ax.text(0.98, 0.02, f"{am[-1]:.2f}", va="bottom", ha="right", color="purple", transform=ax.transAxes)
 
 
-def plot_guider_sequence_summary(oseq: ObservationSequence):
+def plot_guider_sequence_summary(dchunk: DitherChunk):
+
+    oseq = dchunk.obs_seq
     summary = oseq.get_summary(max_line_length=40)
     gseq = oseq.get_guider_sequences(remove_failed=True)
     if gseq is None:
         LOGGER.error("Guider sequences not loaded. Call load_guider_sequences() first.")
         return
     fig = plt.figure(figsize=(12, 10))
-    gs = GridSpec(3, 4, figure=fig, height_ratios=[1.5, 0.5, 1])
+    gs = GridSpec(3, 4, height_ratios=[1.5, 0.5, 1])
     ax1 = fig.add_subplot(gs[:2, 2:])  # Row 0, spans all columns
     ax2 = fig.add_subplot(gs[1, :2])  # Row 1, spans all columns
     ax3 = fig.add_subplot(gs[2, :2])  # Row 1, Column 0
     ax4 = fig.add_subplot(gs[2, 2:])  # Row 1, Column 1
-    t = f"{oseq.sci_targets[0]} ({len(oseq)}), start: {oseq.observations[0].start_time_ut.strftime('%Y-%m-%d %H:%M')}"
+    t = f"{dchunk.target} [DC {dchunk.chunk_index}] ({len(oseq)}), start: {dchunk.time_range[0].strftime('%Y-%m-%d %H:%M')}"
     fig.suptitle(t, y=0.95)
     fig.text(
         0.04,

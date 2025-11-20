@@ -145,7 +145,8 @@ class Observation:
         cls, fpath: Path, fid_x: float = float("nan"), fid_y: float = float("nan")
     ) -> "Observation":
         """Creates an Observation instance from a FITS file."""
-        assert fpath.is_file(), f"FITS file not found: {fpath}"
+        fpath = Path(fpath)
+        assert fpath.exists(), f"FITS file not found: {fpath}"
         header = fits.getheader(fpath)  # type: ignore
         filename = fpath.stem
         start_time_str = header.get("DATE-OBS", "")

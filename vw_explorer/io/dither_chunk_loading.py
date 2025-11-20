@@ -7,7 +7,7 @@ from ..logger import LOGGER
 if TYPE_CHECKING:
     from ..classes import DitherChunk, Observation
 
-def load_dither_chunk(chunk_index: int, target_name: str
+def load_dither_chunk(target_name: str, chunk_index: int 
 ) -> "DitherChunk":
     """
     Loads a specific dither chunk from a DataFrame.

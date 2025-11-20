@@ -2,3 +2,4 @@ from .guider_indexing import create_guider_index
 from .ifu_data_loading import load_ifu_data
 from .observation_loading import load_observations
 from .util import infer_vw_filenames, parse_vw_filenames
+from .dither_chunk_loading import load_dither_chunk_dataframe, load_dither_chunk

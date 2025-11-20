@@ -113,7 +113,7 @@ class DitherChunk:
         observations = series["observation_paths"]
         if not isinstance(observations, list):
             # try to parse as list of filenames:
-            observations = [obs.strip() for obs in observations.strip("[]").split(",")]
+            observations = [obs.strip().strip("'") for obs in observations.strip("[]").split(",")]
         if not all(isinstance(obs, str) for obs in observations):
             raise ValueError(
                 "Series 'observation_paths' must be a list of Observation objects or filenames."
@@ -195,7 +195,7 @@ class DitherChunk:
                 "num_observations": len(chunk),
                 "start_time_ut": chunk.time_range[0],
                 "end_time_ut": chunk.time_range[1],
-                "observation_paths": [obs.fpath for obs in chunk.obs_seq],
+                "observation_paths": [str(obs.fpath) for obs in chunk.obs_seq],
                 "fid_x_mean": fid_coords[0],
                 "fid_y_mean": fid_coords[1],
                 "is_sky_obs": chunk.is_sky_obs,
@@ -212,5 +212,4 @@ class DitherChunk:
         """Plots summary statistics for the observation sequence."""
         from ..plotting import plot_guider_sequence_summary
 
-        obs = self.obs_seq
-        plot_guider_sequence_summary(obs)
+        plot_guider_sequence_summary(self)

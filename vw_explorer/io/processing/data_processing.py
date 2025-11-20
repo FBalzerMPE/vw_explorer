@@ -61,7 +61,7 @@ def process_all_data(logfile_path: Path, force_log_reload: bool = True) -> pd.Da
     obs_df["dither_chunk_index"] = obs_df["filename"].map(chunk_map)
     ch_dict = DitherChunk.get_all_dither_chunks(observations)
     chunks = [ch for ch_list in ch_dict.values() for ch in ch_list]
-    LOGGER.info(f"Processing {len(chunks)} dither chunks from observations. Loading all guider sequences might take a while.")
+    LOGGER.info(f"Processing {len(chunks)} dither chunks from observations. Loading all guider sequences might take a while as we're fitting the guide stars.")
     guider_sequences = [g_seq for ch in chunks for g_seq in ch.obs_seq.get_guider_sequences()]
     generate_dither_chunk_plots(chunks, OUTPUT_PATH)
     seqs_df = GuiderSequence.get_combined_stats_df(guider_sequences)
