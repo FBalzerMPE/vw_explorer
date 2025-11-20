@@ -4,3 +4,4 @@ from .obs_timeslot import ObsTimeslot
 from .observation import Observation
 from .observation_sequence import ObservationSequence
 from .star_model_fit import GuideStarModel
+from .dither_chunk import DitherChunk

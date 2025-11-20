@@ -1,6 +1,6 @@
 import argparse
 
-from .io import create_guider_index, parse_or_load_observations, process_observations
+from .io import create_guider_index, load_observations, process_observations
 from .logger import LOGGER
 
 
@@ -25,7 +25,7 @@ def parse_args():
 
 def main():
     args = parse_args()
-    observations = parse_or_load_observations(logfile_path=args.logfile_path)
+    observations = load_observations(logfile_path=args.logfile_path)
     LOGGER.info(f"Loaded {len(observations)} observations.")
     create_guider_index(guider_dir=args.guider_dir, silent=False)
     process_observations(observations)

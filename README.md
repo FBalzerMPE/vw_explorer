@@ -1,6 +1,12 @@
-# VIRUS-W Quick Analysis
+# VIRUS-W Explorer
 
-Simple tool to review VIRUS-W observations at the Harlan-J-Smith telescope at McDonald Observatory.
+Simple tool to review VIRUS-W observations on-the-fly at the Harlan-J-Smith telescope at McDonald Observatory.
+
+## Installation and requirements
+
+Since the linux machine operating VIRUS-W runs on a specific python-3.6 version, the script should be backwards-compatible but may also work with newer python versions.
+
+You can install it by cloning into this repository and then modifying 
 
 ## Functionalities
 

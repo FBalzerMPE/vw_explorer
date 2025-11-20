@@ -8,7 +8,7 @@ def parse_isoformat(dt_str: str) -> datetime:
     try:
         return datetime.fromisoformat(dt_str)
     except AttributeError:
-        # validate format
+        dt_str = dt_str.strip().replace(" ", "T").replace("-", "").replace(":", "")
         if "." in dt_str:
-            return datetime.strptime(dt_str, "%Y-%m-%dT%H:%M:%S.%f")
-        return datetime.strptime(dt_str, "%Y-%m-%dT%H:%M:%S")
+            return datetime.strptime(dt_str, "%Y%m%dT%H%M%S.%f")
+        return datetime.strptime(dt_str, "%Y%m%dT%H%M%S")

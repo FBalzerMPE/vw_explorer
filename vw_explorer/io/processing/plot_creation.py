@@ -3,39 +3,79 @@ from typing import List
 
 import matplotlib.pyplot as plt
 
-from ...classes import GuiderSequence, Observation
+from ...classes import GuiderSequence, DitherChunk
 from ...logger import LOGGER
 
 
-def generate_observation_plots(
-    observations: List[Observation],
-    guider_sequences: List[GuiderSequence],
-    output_dir: Path,
-):
+def _plot_guider_sequence(gseq: GuiderSequence, output_path: Path):
     """
-    Generates and saves plots for each observation.
+    Generates and saves plots for a single guider sequence.
 
     Parameters
     ----------
-    observations : List[Observation]
-        List of Observation objects.
+    gseq : GuiderSequence
+        GuiderSequence object.
+    output_path : Path
+        Path to save the plot.
+    """
+    try:
+        fig, axes = plt.subplots(1, 3, figsize=(10, 5))
+        gseq.plot_centroid_positions("fiducial", ax=axes[0])
+        gseq.plot_fwhm_timeseries(ax=axes[1])
+        fig.suptitle(f"Guider Sequence: {gseq.observation.long_name}", fontsize=16)
+        fig.savefig(str(output_path), dpi=150, bbox_inches="tight")
+        plt.close(fig)
+        LOGGER.info(f"Saved guider sequence plot to {output_path}")
+    except Exception as e:
+        LOGGER.warning(f"Error generating guider sequence plot: {e}")
+
+
+def _plot_dither_chunk_summary(chunk: DitherChunk, output_path: Path):
+    """
+    Generates and saves a summary plot for a dither chunk.
+
+    Parameters
+    ----------
+    chunk : DitherChunk
+        DitherChunk object.
+    output_path : Path
+        Path to save the plot.
+    """
+    try:
+        chunk.plot_summary()
+        fig = plt.gca()
+        fig.savefig(str(output_path), dpi=150, bbox_inches="tight")
+        plt.close(fig)
+        LOGGER.info(f"Saved dither chunk summary plot to {output_path}")
+    except Exception as e:
+        LOGGER.warning(f"Error generating dither chunk summary plot: {e}")
+
+def generate_dither_chunk_plots(
+    dither_chunks: List["DitherChunk"],
+    output_dir: Path,
+):
+    """
+    Generates and saves plots for each dither chunk.
+
+    Parameters
+    ----------
+    dither_chunks : List[DitherChunk]
+        List of DitherChunk objects.
     output_dir : Path
         Directory to save the plots.
     """
     plot_dir = output_dir / "plots"
-    plot_dir.mkdir(parents=True, exist_ok=True)
-
-    for obs, gseq in zip(observations, guider_sequences):
-        if not obs.is_sky_obs:
+    obs_plot_dir = plot_dir / "observations"
+    obs_plot_dir.mkdir(parents=True, exist_ok=True)
+    dither_chunk_dir = plot_dir / "dither_chunks"
+    dither_chunk_dir.mkdir(parents=True, exist_ok=True)
+    
+    for chunk in dither_chunks:
+        if not chunk.is_sky_obs:
             continue
-        try:
-            fig, axes = plt.subplots(1, 3, figsize=(10, 5))
-            gseq.plot_centroid_positions("fiducial", ax=axes[0])
-            gseq.plot_fwhm_timeseries(ax=axes[1])
-            fig.suptitle(f"Observation: {obs.long_name}", fontsize=16)
-            plot_path = plot_dir / f"{obs.filename}_summary.png"
-            fig.savefig(str(plot_path), dpi=150, bbox_inches="tight")
-            plt.close(fig)
-            LOGGER.info(f"Saved plot for {obs.filename} to {plot_path}")
-        except Exception as e:
-            LOGGER.warning(f"Error generating plot for {obs.filename}: {e}")
+        for gseq in chunk.obs_seq.get_guider_sequences():
+            plot_path = obs_plot_dir / f"{gseq.observation.filename}_summary.png"
+            _plot_guider_sequence(gseq, plot_path)
+        chunk_plot_path = dither_chunk_dir / f"dither_chunk_{chunk.chunk_index}_summary.png"
+        _plot_dither_chunk_summary(chunk, chunk_plot_path)
+

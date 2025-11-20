@@ -3,7 +3,7 @@ from collections import Counter
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from ..calculations import get_target_counts
 from ..logger import LOGGER
@@ -17,12 +17,14 @@ class ObservationSequence:
 
     observations: List[Observation] = field(repr=False)
     sci_targets: List[str] = field(init=False)
+    all_targets: List[str] = field(init=False)
     _guider_sequences: Optional[List[GuiderSequence]] = field(default=None, repr=False)
 
     def __post_init__(self):
         self.sci_targets = sorted(
             set(obs.target for obs in self.observations if not obs.is_calibration_obs)
         )
+        self.all_targets = sorted(set(obs.target for obs in self.observations))
         self.observations.sort(key=lambda x: x.start_time_ut)
 
     def __len__(self) -> int:
@@ -77,6 +79,46 @@ class ObservationSequence:
         ), f"No observations found for target '{target}' in the specified time range."
         return cls(observations=target_obs)
 
+    def _load_guider_sequences(
+        self, reload: bool = False, remove_failed: bool = False
+    ) -> None:
+        """Loads GuiderSequence objects for each observation in the sequence."""
+        if self._guider_sequences is not None and not reload:
+            if len(self._guider_sequences) == len(self.observations):
+                return
+            if not remove_failed:
+                LOGGER.warning(
+                    "Guider sequences already loaded but length mismatch with observations."
+                )
+                return
+        if len(self) > 30:
+            LOGGER.warning(
+                f"Loading guider sequences for {len(self)} observations may take some time."
+            )
+        self._guider_sequences = []
+        remove_indices = []
+        for i, obs in enumerate(self.observations):
+            try:
+                gs = GuiderSequence(obs)
+                self._guider_sequences.append(gs)
+            except ValueError as e:
+                LOGGER.warning(
+                    f"Skipping observation {i} ({obs.filename}) due to error: {e}"
+                )
+                if not remove_failed:
+                    remove_indices.append(i)
+        if remove_failed and remove_indices:
+            for index in sorted(remove_indices, reverse=True):
+                del self.observations[index]
+
+    def get_guider_sequences(
+        self, reload: bool = False, remove_failed: bool = True
+    ) -> List[GuiderSequence]:
+        """Returns the list of GuiderSequence objects for the observations."""
+        if self._guider_sequences is None or reload:
+            self._load_guider_sequences(reload=reload, remove_failed=remove_failed)
+        return self._guider_sequences  # type: ignore
+
     @property
     def is_single_target(self) -> bool:
         """Returns True if the sequence contains observations for a single target."""
@@ -94,12 +136,18 @@ class ObservationSequence:
             for i in range(1, len(dither_values))
         )
 
+    @property
+    def time_range(self) -> Tuple[datetime, datetime]:
+        """Returns the start and end time of the chunk."""
+        start_time = min(obs.start_time_ut for obs in self)
+        end_time = max(obs.start_time_ut for obs in self)
+        return start_time, end_time
+
     def get_summary(self, max_line_length: Optional[int] = None) -> str:
         """Provide a summary string for a list of observations."""
-        earliest, latest = (
-            min(obs.start_time_ut for obs in self).isoformat(" ", "seconds"),
-            max(obs.start_time_ut for obs in self).isoformat(" ", "seconds"),
-        )
+        tr = self.time_range
+        earliest = tr[0].isoformat(" ", "seconds")
+        latest = tr[1].isoformat(" ", "seconds")
         num_obs = len(self)
         target_counts = Counter(obs.target for obs in self)
         science_targets = {
@@ -112,16 +160,7 @@ class ObservationSequence:
             k: v for k, v in target_counts.items() if k not in self.sci_targets
         }
 
-        summary = (
-            f"Observation Log Summary:\n"
-            f"  Time Range:\n    {earliest} to\n    {latest}\n"
-            f"  Total Observations: {num_obs}\n"
-        )
-        num_avail = sum(obs.file_available for obs in self)
-        num_missing = num_obs - num_avail
-        summary += f"  Number of Available Files: {num_avail}\n"
-        if num_missing > 0:
-            summary += f"  Number of Missing Files: {num_missing}\n"
+        summary = "Summary:\n"
         if len(self.sci_targets) == 1:
             summary += f"  Target: {self.sci_targets[0]}\n"
         else:
@@ -130,6 +169,15 @@ class ObservationSequence:
             )
             for target, count in science_targets.items():
                 summary += f"    {target + ':':<10} {count}\n"
+        summary += (            
+            f"  Time Range:\n    {earliest} to\n    {latest}\n"
+            f"  Total Observations: {num_obs}\n"
+        )
+        num_avail = sum(obs.file_available for obs in self)
+        num_missing = num_obs - num_avail
+        summary += f"  Number of Available Files: {num_avail}\n"
+        if num_missing > 0:
+            summary += f"  Number of Missing Files: {num_missing}\n"
         num_calibs = sum(calib_targets.values())
         if num_calibs > 0:
             summary += f"  Calibration Observations: {num_calibs}\n"
@@ -155,85 +203,3 @@ class ObservationSequence:
                 wrapped_lines.append(line)
         summary = "\n".join(wrapped_lines)
         return summary
-
-    def get_all_dither_chunks(
-        self, target_name: Optional[str] = None
-    ) -> List["ObservationSequence"]:
-        """Returns all dither chunks for a given target based on dither pattern.
-        Note that for these chunks we assume that whenever there is a break in the dither
-        sequence (i.e., dither values not increasing exactly by one), a new chunk starts.
-        """
-        if target_name is None:
-            assert (
-                len(self.sci_targets) == 1
-            ), "Multiple targets found; please specify a target_name."
-            target_name = self.sci_targets[0]
-        target_obs = [obs for obs in self.observations if obs.target == target_name]
-        assert target_obs, f"No observations found for target '{target_name}'."
-        # Whenever we have an observation that is not part of the dither pattern, we start a new chunk
-        chunks = []
-        current_chunk = []
-        for i, obs in enumerate(target_obs):
-            if i == 0:
-                current_chunk.append(obs)
-                continue
-            last_obs = target_obs[i - 1]
-            if last_obs.dither == obs.dither - 1:
-                current_chunk.append(obs)
-                continue
-            chunks.append(ObservationSequence(observations=current_chunk))
-            current_chunk = [obs]
-        if current_chunk:
-            chunks.append(ObservationSequence(observations=current_chunk))
-        assert (
-            chunks
-        ), f"No observations found for target '{target_name}' in the specified dither chunks."
-        LOGGER.info(f"Found {len(chunks)} dither chunks for target '{target_name}'.")
-        return chunks
-
-    def get_dither_chunk(
-        self, chunk_index: int = 0, target_name: Optional[str] = None
-    ) -> "ObservationSequence":
-        """Returns a chunk of observations for a given target based on dither pattern."""
-        chunks = self.get_all_dither_chunks(target_name=target_name)
-        assert (
-            0 <= chunk_index < len(chunks)
-        ), f"Chunk index {chunk_index} out of range. Found {len(chunks)} chunks."
-        return chunks[chunk_index]
-
-    def load_guider_sequences(self, reload: bool = False, remove_failed: bool = True):
-        """Loads GuiderSequence objects for each observation in the sequence."""
-        if self.guider_sequences is not None and not reload:
-            assert len(self.guider_sequences) == len(self.observations)
-            return
-        if len(self) > 50:
-            LOGGER.warning(
-                f"Loading guider sequences for {len(self)} observations may take some time."
-            )
-        self.guider_sequences = []
-        remove_indices = []
-        for i, obs in enumerate(self.observations):
-            try:
-                gs = GuiderSequence(obs)
-                self.guider_sequences.append(gs)
-            except ValueError as e:
-                LOGGER.warning(
-                    f"Skipping observation {i} ({obs.filename}) due to error: {e}"
-                )
-                if not remove_failed:
-                    remove_indices.append(i)
-        if remove_failed and remove_indices:
-            for index in sorted(remove_indices, reverse=True):
-                del self.observations[index]
-
-    def plot_summary(self):
-        """Plots summary statistics for the observation sequence."""
-        from ..plotting import plot_guider_sequence_summary
-
-        assert (
-            self.is_single_target
-        ), "Should only plot summary for single-target sequences."
-
-        if self.guider_sequences is None:
-            self.load_guider_sequences()
-        plot_guider_sequence_summary(self)

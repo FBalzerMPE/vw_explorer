@@ -1,3 +1,4 @@
+from collections import Counter
 from datetime import date
 from pathlib import Path
 from typing import TYPE_CHECKING, List
@@ -18,7 +19,7 @@ def parse_obs_logfile(logfile_path: Path) -> List["Observation"]:
 
     current_date = date.today()
     log_data = filter_and_clean_logfile(logfile_path)
-    observations = []
+    observations: List[Observation] = []
     for line_number, line in log_data.items():
         if line.startswith("# date: "):
             current_date = parse_date_line(line, line_number=line_number)
@@ -36,4 +37,10 @@ def parse_obs_logfile(logfile_path: Path) -> List["Observation"]:
                 f"Could not parse line {line_number}:\n\t[{e}]\n\t{line.strip()}"
             )
             continue
+    assert len(observations) > 0, "No observations were parsed from the logfile."
+    cts = Counter(obs.filename for obs in observations)
+    assert all(
+        count == 1 for count in cts.values()
+    ), f"Parsed observations contain duplicate filenames: {[filename for filename, count in cts.items() if count > 1]}"
+
     return sorted(observations, key=lambda x: x.start_time_ut)

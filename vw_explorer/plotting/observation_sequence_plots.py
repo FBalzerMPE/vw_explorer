@@ -5,8 +5,17 @@ import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.gridspec import GridSpec
 
-from ..classes import GuiderSequence, ObservationSequence
+from ..classes import GuiderSequence, Observation, ObservationSequence
 from ..logger import LOGGER
+
+
+def _get_mid_times(obs: List[Observation]) -> np.ndarray:
+    return np.array(
+        [
+            o.timeslot.mid_time if o.timeslot is not None else o.start_time_ut
+            for o in obs
+        ]
+    )
 
 
 def _plot_fwhm_sequence(
@@ -21,11 +30,9 @@ def _plot_fwhm_sequence(
 
     ax.plot(all_times, all_fwhms, "-", color="k", alpha=0.3)
     fwhms = np.array([s.get_fwhm_stats() for s in gseq])
-    start_times = [
-        o.timeslot.mid_time if o.timeslot is not None else o.start_time_ut for o in oseq
-    ]
+    mid_times = _get_mid_times(oseq.observations)
     ax.errorbar(
-        start_times,
+        mid_times,
         fwhms[:, 0],
         yerr=fwhms[:, 1],
         fmt="o",
@@ -36,17 +43,17 @@ def _plot_fwhm_sequence(
     mask = ~np.isnan(noted_fwms)
     if np.any(mask):
         ax.scatter(
-            np.array(start_times)[mask],
+            np.array(mid_times)[mask],
             noted_fwms[mask],
             marker="x",
             color="red",
             label="Reported FWHM",
         )
-    ax.set_xlabel("Observation time")
+    
     ax.set_ylabel("FWHM (arcsec)")
-    ax.set_title("FWHM per Observation")
-    t_labels = [st.strftime("%H:%M:%S") for st in start_times]
-    ax.set_xticks(start_times, labels=t_labels, rotation=45, ha="right")
+    ax.set_title("FWHM")
+    t_labels = [st.strftime("%H:%M:%S") for st in mid_times]
+    ax.set_xticks(mid_times, labels=t_labels, rotation=45, ha="right")
     ax.legend(loc="lower left")
     ymax = max(1.05 * np.nanmax(fwhms[:, 0]), 3)
     ax.set_ylim(0, ymax)
@@ -65,12 +72,10 @@ def _plot_amplitude_sequence(
     ax.plot(all_times, all_amplitudes, "-", label="All Fits", color="k", alpha=0.3)
 
     amplitudes = np.array([s.get_amplitude_stats() for s in gseq])
-    start_times = [
-        o.timeslot.mid_time if o.timeslot is not None else o.start_time_ut for o in oseq
-    ]
+    mid_times = _get_mid_times(oseq.observations)
 
     ax.errorbar(
-        start_times,
+        mid_times,
         amplitudes[:, 0],
         yerr=amplitudes[:, 1],
         fmt="o",
@@ -78,11 +83,11 @@ def _plot_amplitude_sequence(
         label="Fitted Amplitude",
         color="green",
     )
-    ax.set_xlabel("Observation time")
+    
     ax.set_ylabel("Amplitude (a.u.)")
-    ax.set_title("Amplitude per Observation")
-    t_labels = [st.strftime("%H:%M:%S") for st in start_times]
-    ax.set_xticks(start_times, labels=t_labels, rotation=45, ha="right")
+    ax.set_title("Amplitude of guide star fit")
+    t_labels = [st.strftime("%H:%M:%S") for st in mid_times]
+    ax.set_xticks(mid_times, labels=t_labels, rotation=45, ha="right")
     ax.legend(loc="lower left")
     ymax = 1.1 * np.nanpercentile(all_amplitudes, 98)
     ax.set_ylim(0, ymax)
@@ -122,28 +127,51 @@ def _plot_combined_centroids(
     _symmetrize_axis_limits(ax, 10)
 
 
+def _plot_airmass_series(
+        oseq: ObservationSequence,
+        ax: Optional[Axes] = None,
+    ):
+    ax = ax if ax is not None else plt.gca()
+    am = [o.airmass_noted for o in oseq]
+    mid_times = _get_mid_times(oseq.observations)
+    ax.plot(mid_times, am, "o-", color="purple")
+    
+    ax.set_ylabel("Airmass")
+    ax.set_title("Airmass")
+    t_labels = [st.strftime("%H:%M:%S") for st in mid_times]
+    ax.set_xticks(mid_times, labels=t_labels, rotation=45, ha="right")  
+    ax.set_ylim(0, 2)
+    # Annotate start and stop
+    print(am)
+    ax.text(0.02, 0.2, f"{am[0]:.2f}", va="bottom", ha="left", color="purple", transform=ax.transAxes)
+    ax.text(0.98, 0.2, f"{am[-1]:.2f}", va="bottom", ha="right", color="purple", transform=ax.transAxes)
+
+
 def plot_guider_sequence_summary(oseq: ObservationSequence):
-    gseq = oseq.guider_sequences
+    summary = oseq.get_summary(max_line_length=40)
+    gseq = oseq.get_guider_sequences(remove_failed=True)
     if gseq is None:
         LOGGER.error("Guider sequences not loaded. Call load_guider_sequences() first.")
         return
-    fig = plt.figure(figsize=(12, 8))
-    gs = GridSpec(2, 2, figure=fig, height_ratios=[2, 1])
-    ax1 = fig.add_subplot(gs[0, :])  # Row 0, spans all columns
-    ax2 = fig.add_subplot(gs[1, 0])  # Row 1, Column 0
-    ax3 = fig.add_subplot(gs[1, 1])  # Row 1, Column 1
+    fig = plt.figure(figsize=(12, 10))
+    gs = GridSpec(3, 4, figure=fig, height_ratios=[1.5, 0.5, 1])
+    ax1 = fig.add_subplot(gs[:2, 2:])  # Row 0, spans all columns
+    ax2 = fig.add_subplot(gs[1, :2])  # Row 1, spans all columns
+    ax3 = fig.add_subplot(gs[2, :2])  # Row 1, Column 0
+    ax4 = fig.add_subplot(gs[2, 2:])  # Row 1, Column 1
     t = f"{oseq.sci_targets[0]} ({len(oseq)}), start: {oseq.observations[0].start_time_ut.strftime('%Y-%m-%d %H:%M')}"
     fig.suptitle(t, y=0.95)
     fig.text(
-        0.02,
+        0.04,
         0.9,
-        oseq.get_summary(max_line_length=40),
+        summary,
         ha="left",
         va="top",
         bbox={"boxstyle": "round", "facecolor": "wheat", "alpha": 0.5},
     )
     dithers = [obs.dither for obs in oseq.observations]
     _plot_combined_centroids(gseq, ax1, dithers)
-    _plot_fwhm_sequence(gseq, oseq, ax2)
-    _plot_amplitude_sequence(gseq, oseq, ax3)
-    fig.tight_layout(rect=[0, 0.03, 1, 0.95])  # type: ignore
+    _plot_airmass_series(oseq, ax2)
+    _plot_fwhm_sequence(gseq, oseq, ax3)
+    _plot_amplitude_sequence(gseq, oseq, ax4)
+    fig.tight_layout(rect=[0, 0.03, 1, 0.95], h_pad=0.1)  # type: ignore

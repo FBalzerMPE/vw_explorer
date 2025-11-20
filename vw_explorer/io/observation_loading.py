@@ -6,12 +6,14 @@ import pandas as pd
 from ..constants import OUTPUT_PATH
 from ..logger import LOGGER
 from .log_parsing import parse_obs_logfile
+from .dither_chunk_loading import load_dither_chunk_dataframe
 
 if TYPE_CHECKING:
     from ..classes import Observation
 
 
-def parse_or_load_observations(
+
+def load_observations(
     logfile_path: Optional[Path] = None,
     backup_path=OUTPUT_PATH / "observations_raw.csv",
     force_log_reload: bool = False,
@@ -39,4 +41,5 @@ def parse_or_load_observations(
     obs_df = Observation.to_dataframe(obs)
     obs_df.to_csv(backup_path, index=False)
     LOGGER.info(f"Saved parsed {len(obs)} observations to backup CSV at {backup_path}.")
+    load_dither_chunk_dataframe(observations=obs)
     return obs

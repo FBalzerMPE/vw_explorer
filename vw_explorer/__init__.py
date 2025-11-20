@@ -1,5 +1,6 @@
 from .calculations import *
 from .classes import (
+    DitherChunk,
     GuiderFrame,
     GuiderSequence,
     GuideStarModel,
@@ -7,7 +8,7 @@ from .classes import (
     ObservationSequence,
     ObsTimeslot,
 )
-from .constants import ASSET_PATH, DATA_PATH
+from .constants import ASSET_PATH, DATA_PATH, OBS_PATH, OUTPUT_PATH
 from .io import *
 from .io.guider_indexing import *
 from .logger import LOGGER
