@@ -9,7 +9,7 @@ authors = [
     { name = "Fabian Balzer", email = "fbalzer@mpe.mpg.de" }
 ]
 license-files = ["LICENSE"]
-description = "A tool for exploring and analyzing VW guider data."
+description = "A tool for exploring data from the VIRUS-W instrument at the Harlan-J-Smith telescope at McDonald Observatory."
 readme = "README.md"
 keywords = ["astronomy", "data analysis", "guider"]
 classifiers = [

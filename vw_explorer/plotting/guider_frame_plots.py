@@ -55,7 +55,7 @@ def plot_guidefit_model(
     )
     rel_x_cent = model_fit.x_cent - x_min
     rel_y_cent = model_fit.y_cent - y_min
-    cutout_data = model_fit.inupt_data
+    cutout_data = model_fit.input_data
 
     y, x = np.mgrid[0 : cutout_data.shape[0], 0 : cutout_data.shape[1]]
     fitted_data = model_fit.model(x, y)

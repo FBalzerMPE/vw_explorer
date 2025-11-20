@@ -29,6 +29,10 @@ class ObsTimeslot:
         return self.end_time - self.start_time
 
     @property
+    def mid_time(self) -> datetime:
+        return self.start_time + self.duration / 2
+
+    @property
     def summary(self) -> str:
         if self.start_time.date() == self.end_time.date():
             return f"{self.start_time.strftime('%Y-%m-%d %H:%M:%S')} to {self.end_time.strftime('%H:%M:%S')} (duration: {self.duration})"

@@ -1,3 +1,4 @@
+import textwrap
 from collections import Counter
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -5,7 +6,6 @@ from pathlib import Path
 from typing import List, Optional
 
 from ..calculations import get_target_counts
-from ..constants import CALIB_NAMES
 from ..logger import LOGGER
 from .guider_sequence import GuiderSequence
 from .observation import Observation
@@ -16,14 +16,12 @@ class ObservationSequence:
     """Represents a sequence of observations for analysis."""
 
     observations: List[Observation] = field(repr=False)
-    targets: List[str] = field(init=False)
-    guider_sequences: Optional[List[GuiderSequence]] = field(default=None, repr=False)
+    sci_targets: List[str] = field(init=False)
+    _guider_sequences: Optional[List[GuiderSequence]] = field(default=None, repr=False)
 
     def __post_init__(self):
-        self.targets = sorted(
-            set(
-                obs.target for obs in self.observations if obs.target not in CALIB_NAMES
-            )
+        self.sci_targets = sorted(
+            set(obs.target for obs in self.observations if not obs.is_calibration_obs)
         )
         self.observations.sort(key=lambda x: x.start_time_ut)
 
@@ -34,50 +32,17 @@ class ObservationSequence:
         """Allows indexing to access Observation objects."""
         return self.observations[index]
 
+    def __iter__(self):
+        """Allows iteration over Observation objects."""
+        return iter(self.observations)
+
     def __repr__(self) -> str:
         cts = get_target_counts(self.observations, remove_calib=False)
         cts_str = ", ".join(f"{k}: {v}" for k, v in cts.items())
         return f"ObservationSequence(num_observations={len(self.observations)}, target_counts={{ {cts_str} }})"
 
     def __str__(self) -> str:
-        """Provide a summary string for a list of observations."""
-        obs = self.observations
-        earliest, latest = (
-            min(obs.start_time_ut for obs in obs),
-            max(obs.start_time_ut for obs in obs),
-        )
-        num_obs = len(obs)
-        target_counts = Counter(obs.target for obs in obs)
-        science_targets = {
-            k: v for k, v in target_counts.items() if k not in CALIB_NAMES
-        }
-        science_targets = dict(
-            sorted(science_targets.items(), key=lambda item: item[0])
-        )
-        calib_targets = {k: v for k, v in target_counts.items() if k in CALIB_NAMES}
-
-        summary = (
-            f"Observation Log Summary:\n"
-            f"  Time Range:\n    {earliest} to\n    {latest}\n"
-            f"  Total Observations: {num_obs}\n"
-        )
-        num_avail = sum(obs.file_available for obs in obs)
-        num_missing = num_obs - num_avail
-        summary += f"  Number of Available Files: {num_avail}\n"
-        if num_missing > 0:
-            summary += f"  Number of Missing Files: {num_missing}\n"
-        if len(self.targets) == 1:
-            summary += f"  Target: {self.targets[0]}\n"
-        else:
-            summary += f"  Targets ({len(self.targets)}): {', '.join(self.targets)}\n"
-            for target, count in science_targets.items():
-                if target in CALIB_NAMES:
-                    continue
-                summary += f"    {target + ':':<10} {count}\n"
-        num_calibs = sum(calib_targets.values())
-        if num_calibs > 0:
-            summary += f"  Calibration Observations: {num_calibs}\n"
-        return summary
+        return self.get_summary()
 
     @classmethod
     def from_filenames(cls, filenames: List[Path]) -> "ObservationSequence":
@@ -115,7 +80,7 @@ class ObservationSequence:
     @property
     def is_single_target(self) -> bool:
         """Returns True if the sequence contains observations for a single target."""
-        return len(self.targets) == 1
+        return len(self.sci_targets) == 1
 
     @property
     def is_single_dither_chunk(self) -> bool:
@@ -129,15 +94,80 @@ class ObservationSequence:
             for i in range(1, len(dither_values))
         )
 
-    def get_dither_chunk(
-        self, chunk_index: int = 0, target_name: Optional[str] = None
-    ) -> "ObservationSequence":
-        """Returns a chunk of observations for a given target based on dither pattern."""
+    def get_summary(self, max_line_length: Optional[int] = None) -> str:
+        """Provide a summary string for a list of observations."""
+        earliest, latest = (
+            min(obs.start_time_ut for obs in self).isoformat(" ", "seconds"),
+            max(obs.start_time_ut for obs in self).isoformat(" ", "seconds"),
+        )
+        num_obs = len(self)
+        target_counts = Counter(obs.target for obs in self)
+        science_targets = {
+            k: v for k, v in target_counts.items() if k in self.sci_targets
+        }
+        science_targets = dict(
+            sorted(science_targets.items(), key=lambda item: item[0])
+        )
+        calib_targets = {
+            k: v for k, v in target_counts.items() if k not in self.sci_targets
+        }
+
+        summary = (
+            f"Observation Log Summary:\n"
+            f"  Time Range:\n    {earliest} to\n    {latest}\n"
+            f"  Total Observations: {num_obs}\n"
+        )
+        num_avail = sum(obs.file_available for obs in self)
+        num_missing = num_obs - num_avail
+        summary += f"  Number of Available Files: {num_avail}\n"
+        if num_missing > 0:
+            summary += f"  Number of Missing Files: {num_missing}\n"
+        if len(self.sci_targets) == 1:
+            summary += f"  Target: {self.sci_targets[0]}\n"
+        else:
+            summary += (
+                f"  Targets ({len(self.sci_targets)}): {', '.join(self.sci_targets)}\n"
+            )
+            for target, count in science_targets.items():
+                summary += f"    {target + ':':<10} {count}\n"
+        num_calibs = sum(calib_targets.values())
+        if num_calibs > 0:
+            summary += f"  Calibration Observations: {num_calibs}\n"
+        if len(self) <= 6:
+            summary += (
+                "  Comments:\n"
+                + ";\n".join(
+                    f"[D{obs.dither}] {obs.trimmed_comments}"
+                    for obs in self
+                    if obs.comments
+                )
+                + "\n"
+            )
+
+        # Wrap lines longer than max_line_length
+        if max_line_length is None:
+            return summary
+        wrapped_lines = []
+        for line in summary.splitlines():
+            if len(line) > max_line_length:
+                wrapped_lines.extend(textwrap.wrap(line, width=max_line_length))
+            else:
+                wrapped_lines.append(line)
+        summary = "\n".join(wrapped_lines)
+        return summary
+
+    def get_all_dither_chunks(
+        self, target_name: Optional[str] = None
+    ) -> List["ObservationSequence"]:
+        """Returns all dither chunks for a given target based on dither pattern.
+        Note that for these chunks we assume that whenever there is a break in the dither
+        sequence (i.e., dither values not increasing exactly by one), a new chunk starts.
+        """
         if target_name is None:
             assert (
-                len(self.targets) == 1
+                len(self.sci_targets) == 1
             ), "Multiple targets found; please specify a target_name."
-            target_name = self.targets[0]
+            target_name = self.sci_targets[0]
         target_obs = [obs for obs in self.observations if obs.target == target_name]
         assert target_obs, f"No observations found for target '{target_name}'."
         # Whenever we have an observation that is not part of the dither pattern, we start a new chunk
@@ -151,17 +181,27 @@ class ObservationSequence:
             if last_obs.dither == obs.dither - 1:
                 current_chunk.append(obs)
                 continue
-            chunks.append(current_chunk)
+            chunks.append(ObservationSequence(observations=current_chunk))
             current_chunk = [obs]
         if current_chunk:
-            chunks.append(current_chunk)
+            chunks.append(ObservationSequence(observations=current_chunk))
         assert (
             chunks
-        ), f"No observations found for target '{target_name}' in the specified dither chunk."
+        ), f"No observations found for target '{target_name}' in the specified dither chunks."
         LOGGER.info(f"Found {len(chunks)} dither chunks for target '{target_name}'.")
-        return ObservationSequence(observations=chunks[chunk_index])
+        return chunks
 
-    def load_guider_sequences(self, reload: bool = False, remove_failed: bool = False):
+    def get_dither_chunk(
+        self, chunk_index: int = 0, target_name: Optional[str] = None
+    ) -> "ObservationSequence":
+        """Returns a chunk of observations for a given target based on dither pattern."""
+        chunks = self.get_all_dither_chunks(target_name=target_name)
+        assert (
+            0 <= chunk_index < len(chunks)
+        ), f"Chunk index {chunk_index} out of range. Found {len(chunks)} chunks."
+        return chunks[chunk_index]
+
+    def load_guider_sequences(self, reload: bool = False, remove_failed: bool = True):
         """Loads GuiderSequence objects for each observation in the sequence."""
         if self.guider_sequences is not None and not reload:
             assert len(self.guider_sequences) == len(self.observations)

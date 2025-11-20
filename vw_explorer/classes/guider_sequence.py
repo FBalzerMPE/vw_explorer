@@ -45,6 +45,8 @@ class GuiderSequence:
                 continue
             x_guess = m.x_cent
             y_guess = m.y_cent
+            # Clear data after fitting to save memory
+            gf.clear_data()
 
     @property
     def guider_times(self) -> np.ndarray:
@@ -59,17 +61,37 @@ class GuiderSequence:
         fwhms = np.array([s.get_fwhm_stats() for s in sequences])
         fwhm_means = fwhms[:, 0]
         fwhm_stds = fwhms[:, 1]
-
+        amplitudes = np.array(
+            [s.get_amplitude_stats(sigmaclip_val=None) for s in sequences]
+        )
+        amplitude_means = amplitudes[:, 0]
+        amplitude_stds = amplitudes[:, 1]
         data = {
             "filename": [s.observation.filename for s in sequences],
             "centroid_x_mean": cent_means[:, 0],
             "centroid_y_mean": cent_means[:, 1],
+            "amplitude_mean": amplitude_means,
             "fwhm_mean": fwhm_means,
             "centroid_x_std": cent_stds[:, 0],
             "centroid_y_std": cent_stds[:, 1],
             "fwhm_std": fwhm_stds,
+            "amplitude_std": amplitude_stds,
         }
         return pd.DataFrame(data)
+
+    def get_amplitudes(self, sigmaclip_val: Optional[float] = None) -> np.ndarray:
+        if sigmaclip_val is None:
+            return np.array([m.amplitude for m in self.models])
+        amplitudes = self.get_amplitudes(sigmaclip_val=None)
+        return amplitudes[get_clipped_mask(amplitudes, sigmaclip_val=sigmaclip_val)]
+
+    def get_amplitude_stats(
+        self, sigmaclip_val: Optional[float] = None
+    ) -> Tuple[float, float]:
+        amplitudes = self.get_amplitudes(sigmaclip_val=sigmaclip_val)
+        if len(amplitudes) == 0:
+            return np.nan, np.nan
+        return float(np.mean(amplitudes)), float(np.std(amplitudes))
 
     def get_fwhms_arcsec(self, sigmaclip_val: Optional[float] = 2.5) -> np.ndarray:
         if sigmaclip_val is None:
@@ -137,3 +159,11 @@ class GuiderSequence:
         from ..plotting import plot_fwhm_sequence
 
         return plot_fwhm_sequence(self, **scatter_kwargs)
+
+    def plot_amplitude_timeseries(self, annotate_mean: bool = True, **scatter_kwargs):
+        """Plots the amplitude as a function of time."""
+        from ..plotting import plot_amplitude_sequence
+
+        return plot_amplitude_sequence(
+            self, annotate_mean=annotate_mean, **scatter_kwargs
+        )

@@ -9,7 +9,7 @@ from ..constants import GUIDER_PIXSCALE
 
 @dataclass
 class GuideStarModel:
-    inupt_data: np.ndarray = field(repr=False)
+    input_data: np.ndarray = field(repr=False)
     """The cutout data used for fitting."""
     x_cent_in: float
     """The centroid x position used for the cutout (input coords)."""
@@ -17,12 +17,14 @@ class GuideStarModel:
     """The centroid y position used for the cutout (input coords)."""
     size_in: float
     """The size of the cutout used for fitting."""
+    exptime: float
+    """The exposure time of the frame."""
     model: Model = field(repr=False, init=False)
     """The fitted model."""
 
     def __post_init__(self):
         self.model = fit_guide_star(
-            self.inupt_data,
+            self.input_data,
             stddev_guess=3.0,
             window=20,
         )
@@ -43,6 +45,11 @@ class GuideStarModel:
         return self.model.y_mean_0 + self.y_cent_in - self.size_in / 2  # type: ignore
 
     @property
+    def amplitude(self) -> float:
+        """The fitted amplitude of the Gaussian, divided by exposure time."""
+        return self.model.amplitude_0 / self.exptime  # type: ignore
+
+    @property
     def fwhm_pix(self) -> float:
         """The fitted full-width at half-maximum of the Gaussian."""
         # return 2.355 * self.model.stddev_0  # type: ignore
@@ -60,10 +67,10 @@ class GuideStarModel:
 
     def get_residuals(self) -> np.ndarray:
         """Calculates the residuals between the input data and the fitted model."""
-        y, x = np.mgrid[0 : self.inupt_data.shape[0], 0 : self.inupt_data.shape[1]]
+        y, x = np.mgrid[0 : self.input_data.shape[0], 0 : self.input_data.shape[1]]
         fitted_data = self.model(x, y)
-        resid = self.inupt_data - fitted_data
+        resid = self.input_data - fitted_data
 
         # preserve NaNs from input
-        resid[~np.isfinite(self.inupt_data)] = np.nan
+        resid[~np.isfinite(self.input_data)] = np.nan
         return resid

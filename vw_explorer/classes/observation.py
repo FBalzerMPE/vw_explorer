@@ -5,11 +5,12 @@ from pathlib import Path
 from typing import List, Optional, Tuple
 
 import pandas as pd
-from ..util import parse_isoformat
 from astropy.io import fits
 
+from ..constants import CALIB_NAMES, OBS_PATH
 from ..io import parse_vw_filenames
 from ..logger import LOGGER
+from ..util import parse_isoformat
 from .obs_timeslot import ObsTimeslot
 
 
@@ -108,12 +109,12 @@ class Observation:
     filename: str
     """The stem of the file associated with the observation, in the format vw######. Use fpath to get full path.
     """
-    fpath: Path
+    fpath: Path = field(repr=False)
     """Path to the observation file."""
-    start_time_ut: datetime
-    """UT start time of the observation as noted in the observer log."""
     target: str
     """Target of the observation."""
+    start_time_ut: datetime
+    """UT start time of the observation as noted in the observer log."""
     exptime: float
     """Exposure time of the observation in seconds."""
     focus: float
@@ -171,9 +172,7 @@ class Observation:
         )
 
     @staticmethod
-    def parse_obs_log_line(
-        line: str, date: date, base_datapath: Optional[Path] = None
-    ) -> List["Observation"]:
+    def parse_obs_log_line(line: str, date: date) -> List["Observation"]:
         """Parses a single line from an observation log and returns a list of Observations."""
         num_max_parts = len(_EXPECTED_COLS) - 1  # comments can have spaces
         parts = line.strip().split()
@@ -193,7 +192,7 @@ class Observation:
         exptime = entry["exptime"]
         observations = []
         for i, fname in enumerate(entry["files"]):
-            fpath = _try_find_file(fname, base_datapath)
+            fpath = _try_find_file(fname, OBS_PATH)
             actual_dither = dither + i
             start_time = datetime.combine(date, entry["UT"])
             if not math.isnan(exptime):
@@ -246,6 +245,7 @@ class Observation:
                 {
                     "filename": obs.filename,
                     "fpath": str(obs.fpath),
+                    "fpath_available": obs.file_available,
                     "dither": obs.dither,
                     "target": obs.target,
                     "start_time_ut": obs.start_time_ut,
@@ -278,6 +278,11 @@ class Observation:
         return not math.isnan(self.airmass_noted)
 
     @property
+    def is_calibration_obs(self) -> bool:
+        """Is this observation a calibration frame (bias, dark, flat, etc.)?"""
+        return any(name in self.target.lower() for name in CALIB_NAMES)
+
+    @property
     def file_available(self) -> bool:
         """Checks if the observation file exists."""
         return self.fpath.is_file()
@@ -299,6 +304,14 @@ class Observation:
             s += f"  Comments: {self.comments}\n"
         s += f"  Fiducial coords: ({self.fiducial_coords[0]:.1f}, {self.fiducial_coords[1]:.1f})\n"
         return s
+
+    @property
+    def trimmed_comments(self) -> str:
+        """Returns the comments trimmed to a maximum of 60 characters."""
+        max_length = 60
+        if len(self.comments) <= max_length:
+            return self.comments
+        return self.comments[: max_length - 3] + "..."
 
     def _update_information(self, silent=True) -> None:
         """Update the information of the observation from its FITS header."""

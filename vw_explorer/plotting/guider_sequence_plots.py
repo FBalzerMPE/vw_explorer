@@ -276,3 +276,63 @@ def plot_fwhm_sequence(
     )
 
     return ax
+
+
+def plot_amplitude_sequence(
+    gseq: GuiderSequence,
+    annotate_mean: bool = True,
+    ax: Optional[plt.Axes] = None,
+    **scatter_kwargs,
+) -> plt.Axes:
+    """Plots the amplitude as a function of time.
+
+    Parameters
+    ----------
+    gseq : GuiderSequence
+        The guider sequence with fitted models.
+    annotate_mean : bool, optional
+        Whether to annotate the mean and stddev on the plot. Default is True.
+    ax : plt.Axes, optional
+        Matplotlib Axes to plot on. If None, creates a new figure and axes.
+    scatter_kwargs : dict
+        Additional keyword arguments passed to plt.scatter.
+
+    Returns
+    -------
+    plt.Axes
+        The Axes object containing the amplitude plot.
+    """
+    ax = plt.gca() if ax is None else ax
+
+    amplitudes = gseq.get_amplitudes(sigmaclip_val=None)
+    scatter_kwargs.setdefault("s", 30)
+    scatter_kwargs.setdefault("color", "k")
+    ax.scatter(gseq.guider_times, amplitudes, **scatter_kwargs)
+    ax.set_xlabel("Time (UT)")
+    ax.set_ylabel("Amplitude")
+    ax.set_title("Amplitude over Guider Sequence Frames")
+    ax.grid(True)
+
+    if not annotate_mean:
+        return ax
+    mean_amp = np.nanmean(amplitudes)
+    std_amp = np.nanstd(amplitudes)
+    ax.axhline(mean_amp, color="red", linestyle="--")
+    ax.axhspan(
+        mean_amp - std_amp,
+        mean_amp + std_amp,
+        color="red",
+        alpha=0.2,
+        label="$1\\sigma$ range",
+    )
+    ax.text(
+        0.95,
+        0.95,
+        f"Mean Amplitude: ${mean_amp:.2f}\\pm {std_amp:.2f}$",
+        transform=ax.transAxes,
+        ha="right",
+        va="top",
+        color="red",
+    )
+
+    return ax

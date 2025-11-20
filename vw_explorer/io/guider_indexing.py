@@ -59,13 +59,13 @@ def create_guider_index(
         if not silent:
             LOGGER.info("No new files to index for guider index, skipping operation.")
         return
-    if not silent:
-        LOGGER.info(f"Found {len(files)} new files to index in {GUIDER_PATH}")
+    LOGGER.info(
+        f"Guider index creation: Found {len(files)} new files to index in {GUIDER_PATH}"
+    )
     if len(files) > 500:
-        if not silent:
-            LOGGER.warning(
-                f"Large number of files ({len(files)}) to index. Creating index may take a while."
-            )
+        LOGGER.warning(
+            f"Large number of files ({len(files)}) to index. Creating index may take a while."
+        )
 
     rows = []
     for f in files:

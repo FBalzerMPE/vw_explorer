@@ -37,5 +37,7 @@ metadata = load_pyproject_metadata()
 setup(
     packages=find_packages(),
     package_data={"vw_explorer": ["assets/*", "scripts/*"]},
+    long_description=Path("README.md").read_text(),
+    long_description_content_type="text/markdown",
     **metadata,
 )
