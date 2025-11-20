@@ -2,7 +2,7 @@ import math
 from dataclasses import dataclass, field
 from datetime import date, datetime, time, timedelta
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
 from astropy.io import fits
@@ -80,15 +80,11 @@ def _parse_float(s: str) -> float:
         raise AssertionError(f"Could not convert '{s}' to float.") from e
 
 
-def _try_find_file(fname: str, base_datapath: Optional[Path] = None) -> Path:
-    if base_datapath is None:
+def _try_find_file(fname: str, avail_files: Optional[Dict[str, Path]] = None) -> Path:
+    if avail_files is None:
         return Path(fname).with_suffix(".fits")
-    # Walk the base datapath to find the file
-    avail = list(base_datapath.glob("**/" + fname + ".fits"))
-    if avail:
-        assert len(avail) == 1, f"Multiple files found for {fname} in {base_datapath}."
-        return avail[0]
-    return (base_datapath / fname).with_suffix(".fits")
+    
+    return avail_files.get(fname, Path(fname).with_suffix(".fits"))
 
 
 _EXPECTED_COLS = {
@@ -173,7 +169,7 @@ class Observation:
         )
 
     @staticmethod
-    def parse_obs_log_line(line: str, date: date) -> List["Observation"]:
+    def parse_obs_log_line(line: str, date: date, avail_files: Optional[Dict[str, Path]] = None) -> List["Observation"]:
         """Parses a single line from an observation log and returns a list of Observations."""
         num_max_parts = len(_EXPECTED_COLS) - 1  # comments can have spaces
         parts = line.strip().split()
@@ -193,7 +189,7 @@ class Observation:
         exptime = entry["exptime"]
         observations = []
         for i, fname in enumerate(entry["files"]):
-            fpath = _try_find_file(fname, OBS_PATH)
+            fpath = _try_find_file(fname, avail_files=avail_files)
             actual_dither = dither + i
             start_time = datetime.combine(date, entry["UT"])
             if not math.isnan(exptime):
@@ -322,7 +318,11 @@ class Observation:
                     f"Cannot update observation info, file not found: {self.fpath}"
                 )
             return
-        header = fits.getheader(self.fpath)
+        try:
+            header = fits.getheader(self.fpath)
+        except Exception as e:
+            LOGGER.error(f"Error reading FITS header from {self.fpath}: {e}")
+            return
         self.start_time_ut = datetime.strptime(
             header.get("DATE-OBS", ""), "%Y-%m-%dT%H:%M:%S.%f"
         )

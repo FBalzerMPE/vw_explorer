@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, List
 
 from ..logger import LOGGER
+from ..constants import OBS_PATH
 from .log_sanitization import filter_and_clean_logfile, parse_date_line
 
 if TYPE_CHECKING:
@@ -15,6 +16,8 @@ def parse_obs_logfile(logfile_path: Path) -> List["Observation"]:
     Parses a logfile and returns a list of Observations.
 
     """
+    # Walk the base datapath to find the file
+    avail_files = {f.stem: f for f in OBS_PATH.glob("**/vw*.fits")}
     from ..classes import Observation
 
     current_date = date.today()
@@ -25,7 +28,7 @@ def parse_obs_logfile(logfile_path: Path) -> List["Observation"]:
             current_date = parse_date_line(line, line_number=line_number)
             continue
         try:
-            entries = Observation.parse_obs_log_line(line, date=current_date)
+            entries = Observation.parse_obs_log_line(line, date=current_date, avail_files=avail_files)
             if not entries:
                 continue
             if len(entries) > 20:
