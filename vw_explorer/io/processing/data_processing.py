@@ -44,9 +44,9 @@ def _get_dither_chunk_mapping(observations: List[Observation]) -> dict:
         if obs.is_calibration_obs:
             chunk_mapping[obs.filename] = -1
             continue
-        chunk_df = chunk_df[chunk_df["observation_names"].str.contains(obs.filename)]
-        if not chunk_df.empty:
-            chunk_mapping[obs.filename] = chunk_df.iloc[0]["chunk_index"]
+        sub_df = chunk_df[chunk_df["observation_names"].str.contains(obs.filename)]
+        if not sub_df.empty:
+            chunk_mapping[obs.filename] = sub_df.iloc[0]["chunk_index"]
             continue
         chunk_mapping[obs.filename] = -1
         LOGGER.warning(f"No dither chunk found for observation {obs.filename}.")
