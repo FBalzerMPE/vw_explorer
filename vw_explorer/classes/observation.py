@@ -7,7 +7,7 @@ from typing import Dict, List, Optional, Tuple
 import pandas as pd
 from astropy.io import fits
 
-from ..constants import CALIB_NAMES, OBS_PATH
+from ..constants import CALIB_NAMES
 from ..io import parse_vw_filenames
 from ..logger import LOGGER
 from ..util import parse_isoformat
@@ -213,7 +213,6 @@ class Observation:
                 fid = _add_fiducial_offset(
                     actual_dither, fid[0], fid[1]
                 )
-                print(target, fid)
             if not math.isnan(exptime):
                 # Adding the 90 seconds overhead only yields approximate start time!
                 start_time += timedelta(seconds=i * (exptime + 90))

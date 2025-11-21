@@ -212,6 +212,6 @@ class DitherChunk:
 
     def plot_summary(self):
         """Plots summary statistics for the observation sequence."""
-        from ..plotting import plot_guider_sequence_summary
+        from ..plotting import plot_dither_chunk_summary
 
-        plot_guider_sequence_summary(self)
+        plot_dither_chunk_summary(self)

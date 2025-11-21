@@ -125,6 +125,11 @@ class GuiderSequence:
         if len(fwhms) == 0:
             return np.nan, np.nan
         return float(np.mean(fwhms)), float(np.std(fwhms))
+    
+    def get_stacked_frame(self) -> np.ndarray:
+        """Returns a normalized stacked frame from all guider frames in the sequence."""
+        from ..calculations.image_stacking import stack_frames
+        return stack_frames(self.frames, self.get_centroids(sigmaclip_val=None), sigmaclip_val=2.5)
 
     def plot_fits(self, idx: Optional[int] = None):
         """Plots the guider frames with their fitted models.
@@ -137,33 +142,49 @@ class GuiderSequence:
             return
         for frame, model in zip(self.frames, self.models):
             plot_guidefit_model(frame, model)
+    
+    def plot_initial_frame(self, center_around: Literal["none", "fiducial", "mean"] = "fiducial", cutout_size: int = 70, **kwargs):
+        """Plots the first guider frame in the sequence with its fitted model."""
+        from ..plotting import plot_frame_cutout
+        mean_coords = None
+        if center_around == "mean":
+            mean_coords = self.get_centroid_stats(sigmaclip_val=2.5)[0]
+        elif center_around == "fiducial":
+            mean_coords = self.observation.fiducial_coords
+        plot_frame_cutout(self.frames[0], mean_coords, cutout_size, **kwargs)
 
     def plot_centroid_positions(
         self,
         relative_to: Literal["origin", "fiducial", "mean"] = "fiducial",
         annotate_mean: bool = True,
-        **scatter_kwargs,
+        **kwargs,
     ):
         """Scatter plot of fitted centroids from the sequence.
 
         Further documentation in `scatter_positions`.
         """
-        from ..plotting import plot_centroid_positions
+        from ..plotting import plot_centroids_for_single_gseq
 
-        return plot_centroid_positions(
-            self, relative_to, annotate_mean=annotate_mean, **scatter_kwargs
+        return plot_centroids_for_single_gseq(
+            self, relative_to, annotate_mean=annotate_mean, **kwargs
         )
 
     def plot_fwhm_timeseries(self, annotate_mean: bool = True, **scatter_kwargs):
         """Plots the FWHM (in arcsec) as a function of time."""
-        from ..plotting import plot_fwhm_sequence
+        from ..plotting import plot_fwhms_for_single_gseq
 
-        return plot_fwhm_sequence(self, **scatter_kwargs)
+        return plot_fwhms_for_single_gseq(self, **scatter_kwargs)
 
     def plot_amplitude_timeseries(self, annotate_mean: bool = True, **scatter_kwargs):
         """Plots the amplitude as a function of time."""
-        from ..plotting import plot_amplitude_sequence
+        from ..plotting import plot_amplitudes_for_single_gseq
 
-        return plot_amplitude_sequence(
+        return plot_amplitudes_for_single_gseq(
             self, annotate_mean=annotate_mean, **scatter_kwargs
         )
+
+    def plot_summary(self):
+        """Plots summary statistics for the guider sequence."""
+        from ..plotting import plot_guider_sequence_summary
+
+        return plot_guider_sequence_summary(self)

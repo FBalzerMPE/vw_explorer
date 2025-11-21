@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -6,8 +6,8 @@ from matplotlib.axes import Axes
 from matplotlib.colors import LogNorm
 from matplotlib.figure import Figure
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-
-from ..classes import GuiderFrame, GuideStarModel
+from typing_extensions import Literal
+from ..classes import GuiderFrame, GuideStarModel, Observation
 
 
 def plot_img_data(
@@ -36,6 +36,29 @@ def plot_img_data(
         # hide the reserved cax so it still consumes space but doesn't draw
         cax.set_visible(False)
 
+def _prepare_frame_data(
+    frame: GuiderFrame, mean_coords: Optional[Tuple[float, float]] = None, cutout_size: int = 20, 
+) -> np.ndarray:
+    if mean_coords is None:
+        return frame.data
+    return frame.get_cutout(*mean_coords, cutout_size)
+
+def plot_frame_cutout(
+    frame: GuiderFrame,
+    mean_coords: Optional[Tuple[float, float]] = None,
+    cutout_size: int = 20,
+    ax: Optional[Axes] = None,
+    **kwargs,
+) -> Axes:
+    """Plots data from the given guider frame in context of the observation.
+    """
+    ax = plt.gca() if ax is None else ax
+    data = _prepare_frame_data(frame, mean_coords, cutout_size=cutout_size)
+    plot_img_data(data, ax=ax, **kwargs)
+    if mean_coords is not None:
+        ax.plot(cutout_size // 2, cutout_size // 2, "bx", markersize=12)
+        ax.text(cutout_size // 2 + 2, cutout_size // 2 + 2, f"{mean_coords[0]:.1f}, {mean_coords[1]:.1f}", color="b", bbox=dict(facecolor="white", alpha=0.7))
+    return ax
 
 def plot_guidefit_model(
     frame: GuiderFrame,

@@ -3,6 +3,8 @@ from typing import List
 
 import matplotlib.pyplot as plt
 
+from ...io import load_observations
+
 from ...classes import GuiderSequence, DitherChunk
 from ...logger import LOGGER
 
@@ -19,13 +21,11 @@ def _plot_guider_sequence(gseq: GuiderSequence, output_path: Path):
         Path to save the plot.
     """
     try:
-        fig, axes = plt.subplots(1, 3, figsize=(10, 5))
-        gseq.plot_centroid_positions("fiducial", ax=axes[0])
-        gseq.plot_fwhm_timeseries(ax=axes[1])
-        fig.suptitle(f"Guider Sequence: {gseq.observation.long_name}", fontsize=16)
+        fig = gseq.plot_summary()
+        fig.suptitle(f"{gseq.observation.long_name}", fontsize=16)
         fig.savefig(str(output_path), dpi=150, bbox_inches="tight")
         plt.close(fig)
-        LOGGER.info(f"Saved guider sequence plot to {output_path}")
+        LOGGER.debug(f"Saved guider sequence plot to {output_path}")
     except Exception as e:
         LOGGER.warning(f"Error generating guider sequence plot: {e}")
 
@@ -46,12 +46,11 @@ def _plot_dither_chunk_summary(chunk: DitherChunk, output_path: Path):
         fig = plt.gcf()
         fig.savefig(str(output_path), dpi=150, bbox_inches="tight")
         plt.close(fig)
-        LOGGER.info(f"Saved dither chunk summary plot to {output_path}")
+        LOGGER.debug(f"Saved dither chunk summary plot to {output_path}")
     except Exception as e:
         LOGGER.warning(f"Error generating dither chunk summary plot: {e}")
 
 def generate_dither_chunk_plots(
-    dither_chunks: List["DitherChunk"],
     output_dir: Path,
 ):
     """
@@ -64,6 +63,10 @@ def generate_dither_chunk_plots(
     output_dir : Path
         Directory to save the plots.
     """
+    observations = load_observations()
+    ch_dict = DitherChunk.get_all_dither_chunks(observations)
+    dither_chunks = [ch for ch_list in ch_dict.values() for ch in ch_list]
+
     plot_dir = output_dir / "plots"
     obs_plot_dir = plot_dir / "observations"
     obs_plot_dir.mkdir(parents=True, exist_ok=True)

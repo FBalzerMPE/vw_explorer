@@ -59,7 +59,7 @@ def main():
     for obs in seq.observations:
         obs.fiducial_coords = (fid_x, fid_y)
     LOGGER.info(f"Observation Sequence Summary:\n{seq}")
-    seq.plot_summary()
+    seq.plot
     import matplotlib.pyplot as plt
 
     plt.show()

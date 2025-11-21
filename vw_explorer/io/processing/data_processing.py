@@ -7,7 +7,7 @@ from ...classes import GuiderSequence, Observation, DitherChunk
 from ...constants import OUTPUT_PATH
 from ...logger import LOGGER
 from ..observation_loading import load_observations
-from .plot_creation import generate_dither_chunk_plots
+from .summary_plots import generate_dither_chunk_plots
 from ..dither_chunk_loading import load_dither_chunk_dataframe
 
 def save_observations_to_csv(df: pd.DataFrame, output_file: Path):
@@ -44,7 +44,7 @@ def _get_dither_chunk_mapping(observations: List[Observation]) -> dict:
         if obs.is_calibration_obs:
             chunk_mapping[obs.filename] = -1
             continue
-        sub_df = chunk_df[chunk_df["observation_names"].str.contains(obs.filename)]
+        sub_df = chunk_df[chunk_df["observation_names"].apply(lambda x: obs.filename in x)]
         if not sub_df.empty:
             chunk_mapping[obs.filename] = sub_df.iloc[0]["chunk_index"]
             continue
@@ -52,7 +52,7 @@ def _get_dither_chunk_mapping(observations: List[Observation]) -> dict:
         LOGGER.warning(f"No dither chunk found for observation {obs.filename}.")
     return chunk_mapping
 
-def process_all_data(logfile_path: Path, force_log_reload: bool = True) -> pd.DataFrame:
+def process_observation_data(logfile_path: Path, force_log_reload: bool = True) -> pd.DataFrame:
     observations = load_observations(
         logfile_path=logfile_path, force_log_reload=force_log_reload
     )
@@ -63,7 +63,6 @@ def process_all_data(logfile_path: Path, force_log_reload: bool = True) -> pd.Da
     chunks = [ch for ch_list in ch_dict.values() for ch in ch_list]
     LOGGER.info(f"Processing {len(chunks)} dither chunks from observations. Loading all guider sequences might take a while as we're fitting the guide stars.")
     guider_sequences = [g_seq for ch in chunks for g_seq in ch.obs_seq.get_guider_sequences()]
-    generate_dither_chunk_plots(chunks, OUTPUT_PATH)
     seqs_df = GuiderSequence.get_combined_stats_df(guider_sequences)
     final_df = obs_df.merge(seqs_df, on="filename", how="left")
     output_file = OUTPUT_PATH / "observations_processed.csv"

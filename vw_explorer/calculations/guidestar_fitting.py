@@ -3,6 +3,8 @@ from typing import Optional
 import numpy as np
 from astropy.modeling import Fittable2DModel, Model, Parameter, fitting, models
 
+import warnings
+
 
 class SymmetricGaussian2D(Fittable2DModel):
     """
@@ -119,7 +121,12 @@ def fit_guide_star(
 
     mask = np.isfinite(sub)
     fitter = fitting.LevMarLSQFitter()
-    fitted = fitter(model, xgrid[mask], ygrid[mask], sub[mask], maxiter=200)
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            category=UserWarning
+        )
+        fitted = fitter(model, xgrid[mask], ygrid[mask], sub[mask], maxiter=200)
     fit_info = getattr(fitter, "fit_info", None)
     if fit_info is not None:
         fitted.fit_info = fit_info
