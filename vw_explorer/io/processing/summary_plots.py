@@ -64,8 +64,10 @@ def generate_dither_chunk_plots(
         Directory to save the plots.
     """
     observations = load_observations()
+    observations = [obs for obs in observations if not obs.is_calibration_obs]
     ch_dict = DitherChunk.get_all_dither_chunks(observations)
     dither_chunks = [ch for ch_list in ch_dict.values() for ch in ch_list]
+    dither_chunks = [ch for ch in dither_chunks if ch.is_sky_obs]
 
     plot_dir = output_dir / "plots"
     obs_plot_dir = plot_dir / "observations"
@@ -74,9 +76,9 @@ def generate_dither_chunk_plots(
     dither_chunk_dir.mkdir(parents=True, exist_ok=True)
     
     for chunk in dither_chunks:
-        if not chunk.is_sky_obs:
-            continue
         for gseq in chunk.obs_seq.get_guider_sequences():
+            if len(gseq) == 0:
+                continue
             plot_path = obs_plot_dir / f"{gseq.observation.filename}_summary.png"
             _plot_guider_sequence(gseq, plot_path)
         chunk_plot_path = dither_chunk_dir / f"dither_chunk_{chunk.target}_{chunk.chunk_index}_summary.png"
