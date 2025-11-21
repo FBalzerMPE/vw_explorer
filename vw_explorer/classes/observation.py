@@ -34,6 +34,22 @@ def _sanitize_start_time(ut_str: str) -> time:
         raise AssertionError(f"UT time of {ut_str} contains invalid values.") from e
 
 
+def _add_fiducial_offset(dither: int, fid_x: float, fid_y: float) -> Tuple[float, float]:
+    """Applies dither-based offsets to fiducial coordinates."""
+    offset_map = {
+        1: (0.0, 0.0),
+        2: (5.3, 2.8),
+        3: (0.0, 5.6),
+        4: (-1.5, 2.8),
+        5: (3.8, 0.0),
+        6: (3.8, 5.8),
+    }
+    assert dither in offset_map, f"Dither position must be a positive integer between 1 and 6, not {dither}."
+    if dither in offset_map:
+        dx, dy = offset_map[dither]
+        return fid_x + dx, fid_y + dy
+    return fid_x, fid_y
+
 def _parse_fiducial_coords(fid_str: str) -> Tuple[float, float]:
     if fid_str == "" or fid_str == "-":
         return (float("nan"), float("nan"))
@@ -119,8 +135,8 @@ class Observation:
     """Full width at half maximum (FWHM) in arcseconds noted during observation."""
     fiducial_coords: Tuple[float, float]
     """Fiducial coordinates at guider in pixels (x, y)."""
-    airmass_noted: float
-    """Airmass noted for the observation."""
+    airmass: float
+    """Airmass noted for the observation, or logged at end of exposure (from fits header)."""
     comments: str
     """Additional comments or notes about the observation."""
     dither: int = 1
@@ -138,7 +154,7 @@ class Observation:
 
     @classmethod
     def from_fits(
-        cls, fpath: Path, fid_x: float = float("nan"), fid_y: float = float("nan")
+        cls, fpath: Path, fid_x: float = float("nan"), fid_y: float = float("nan"), fwhm_noted: float = float("nan")
     ) -> "Observation":
         """Creates an Observation instance from a FITS file."""
         fpath = Path(fpath)
@@ -146,9 +162,9 @@ class Observation:
         header = fits.getheader(fpath)  # type: ignore
         filename = fpath.stem
         start_time_str = header.get("DATE-OBS", "")
-        start_time = datetime.strptime(start_time_str, "%Y-%m-%dT%H:%M:%S.%f")
+        start_time = parse_isoformat(start_time_str)
         t_parts = header.get("OBJECT", "Unknown").split("dither")
-        target = t_parts[0].strip()
+        target = t_parts[0].strip().replace("PGC", "P")
         dither = int(t_parts[1].strip()) + 1 if len(t_parts) > 1 else 1
         exptime = header.get("EXPTIME", float("nan"))
         focus = header.get("FOCUS", float("nan"))
@@ -161,9 +177,9 @@ class Observation:
             target=target,
             exptime=exptime,
             focus=focus,
-            fwhm_noted=float("nan"),
+            fwhm_noted=fwhm_noted,
             fiducial_coords=(fid_x, fid_y),
-            airmass_noted=airmass,
+            airmass=airmass,
             comments=header.get("COMMENT", ""),
             dither=dither,
         )
@@ -185,13 +201,19 @@ class Observation:
         entry["comments"] = " ".join(parts[num_max_parts:])
         if entry["comments"] == "-":
             entry["comments"] = ""
-        target, dither = entry["target_and_dither"]
+        target, base_dither = entry["target_and_dither"]
         exptime = entry["exptime"]
         observations = []
         for i, fname in enumerate(entry["files"]):
             fpath = _try_find_file(fname, avail_files=avail_files)
-            actual_dither = dither + i
+            actual_dither = base_dither + i
             start_time = datetime.combine(date, entry["UT"])
+            fid = entry["fiducial"]
+            if target.lower() not in CALIB_NAMES and actual_dither != base_dither:
+                fid = _add_fiducial_offset(
+                    actual_dither, fid[0], fid[1]
+                )
+                print(target, fid)
             if not math.isnan(exptime):
                 # Adding the 90 seconds overhead only yields approximate start time!
                 start_time += timedelta(seconds=i * (exptime + 90))
@@ -203,8 +225,8 @@ class Observation:
                 exptime=exptime,
                 focus=entry["focus"],
                 fwhm_noted=entry["FWHM"],
-                fiducial_coords=entry["fiducial"],
-                airmass_noted=entry["AM"],
+                fiducial_coords=fid,
+                airmass=entry["AM"],
                 comments=entry["comments"],
                 dither=actual_dither,
             )
@@ -219,6 +241,8 @@ class Observation:
         fname = series["filename"]
         fpath = Path(series["fpath"])
         time = parse_isoformat(series["start_time_ut"])
+        c_entry = series["comments"]
+        comments = str(c_entry) if pd.notna(c_entry) else ""
         return cls(
             filename=fname,
             fpath=fpath,
@@ -228,8 +252,8 @@ class Observation:
             focus=series["focus"],
             fwhm_noted=series["fwhm_noted"],
             fiducial_coords=(series["fiducial_x"], series["fiducial_y"]),
-            airmass_noted=series["airmass_noted"],
-            comments=series["comments"],
+            airmass=series["airmass_noted"],
+            comments=comments,
             dither=series["dither"],
         )
 
@@ -251,7 +275,7 @@ class Observation:
                     "fwhm_noted": obs.fwhm_noted,
                     "fiducial_x": obs.fiducial_coords[0],
                     "fiducial_y": obs.fiducial_coords[1],
-                    "airmass_noted": obs.airmass_noted,
+                    "airmass_noted": obs.airmass,
                     "comments": obs.comments,
                 }
             )
@@ -272,7 +296,7 @@ class Observation:
 
     @property
     def is_sky_obs(self) -> bool:
-        return not math.isnan(self.airmass_noted)
+        return not math.isnan(self.airmass)
 
     @property
     def is_calibration_obs(self) -> bool:
@@ -293,7 +317,7 @@ class Observation:
         else:
             s += f"  Start time (UT): {self.start_time_ut.isoformat()}\n"
         if self.is_sky_obs:
-            s += f"  Airmass: {self.airmass_noted:.2f}\n"
+            s += f"  Airmass: {self.airmass:.2f}\n"
             s += f"  FWHM: {self.fwhm_noted:.2f} arcsec\n"
         if not math.isnan(self.exptime):
             s += f"  Exposure time per frame: {self.exptime:.1f} s\n"
@@ -327,7 +351,8 @@ class Observation:
             header.get("DATE-OBS", ""), "%Y-%m-%dT%H:%M:%S.%f"
         )
         t_parts = header.get("OBJECT", "Unknown").split("dither")
-        self.target = t_parts[0].strip()
+        # Standardize PGC naming as we were inconsistent
+        self.target = t_parts[0].strip().replace("PGC", "P")
         if len(t_parts) > 1:
             try:
                 self.dither = int(t_parts[1].strip()) + 1
@@ -337,6 +362,7 @@ class Observation:
             self.dither = 1
         self.exptime = header.get("EXPTIME", float("nan"))
         self.focus = header.get("FOCUS", float("nan"))
+        self.airmass = header.get("AIRMASS", float("nan"))
         self.timeslot = (
             None
             if math.isnan(self.exptime)

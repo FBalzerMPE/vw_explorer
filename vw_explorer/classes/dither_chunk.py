@@ -96,6 +96,7 @@ class DitherChunk:
     def from_series(
         cls,
         series: pd.Series,
+        obs_df: Optional[pd.DataFrame] = None,
     ) -> "DitherChunk":
         """
         Creates a DitherChunk from a pandas Series.
@@ -104,28 +105,29 @@ class DitherChunk:
         ----------
         series : pd.Series
             A pandas Series containing 'observations' and 'chunk_index'.
+        obs_df : Optional[pd.DataFrame]
+            Optional DataFrame to look up Observation objects if needed, otherwise try to yank them from fits file.
 
         Returns
         -------
         DitherChunk
             The created DitherChunk object.
         """
-        observations = series["observation_paths"]
-        if not isinstance(observations, list):
-            # try to parse as list of filenames:
-            observations = [obs.strip().strip("'") for obs in observations.strip("[]").split(",")]
-        if not all(isinstance(obs, str) for obs in observations):
-            raise ValueError(
-                "Series 'observation_paths' must be a list of Observation objects or filenames."
-            )
         chunk_index: int = series["chunk_index"]  # type: ignore
-        fid_x, fid_y = series.get("fid_x_mean", float("nan")), series.get(
-            "fid_y_mean", float("nan")
-        )
-        observations = [
+        obs_list: List[Observation] = []
+        if obs_df is None:
+            observations = series["observation_paths"]
+            fid_x = series.get("fid_x_mean", float("nan"))
+            fid_y = series.get("fid_y_mean", float("nan"))
+            obs_list = [
             Observation.from_fits(fname, fid_x, fid_y) for fname in observations
         ]
-        obs_seq = ObservationSequence(observations=observations)
+        else:
+            obs_names = series["observation_names"]
+            for fname in obs_names:
+                row = obs_df.set_index("filename", drop=False).loc[fname]
+                obs_list.append(Observation.from_series(row))
+        obs_seq = ObservationSequence(observations=obs_list)
         return cls(obs_seq=obs_seq, chunk_index=chunk_index)
 
     @staticmethod

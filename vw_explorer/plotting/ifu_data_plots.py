@@ -20,10 +20,8 @@ def plot_ifu_data(
     norm = Normalize(vmin=vmin, vmax=vmax)
     color = norm(flux)
     ax = ax if ax is not None else plt.gca()
-    fig = ax.figure
-    fig.set_size_inches(6, 3.33)
+    fig = plt.gcf()
     fig.suptitle(title, ha="center")
-    ax.set_position([0.15, 0.15, 0.75, 0.75])  # type: ignore
     kwargs.setdefault("marker", "h")
     kwargs.setdefault("s", 220.0)
     if "color" in kwargs:
@@ -31,8 +29,10 @@ def plot_ifu_data(
     c = ax.scatter(fiberpos[:, 1], fiberpos[:, 2], c=color, **kwargs)
     ax.set_xlabel("x [$''$]")
     ax.set_ylabel("y [$''$]")
-    ax.axis("equal")
+    ax.axis("equal", adjustable="box")
     fig.colorbar(c, label="Normalized log(Flux + 0.1)")
     # Annotate min and max fiber flux
     s = f"Value range: {vmin:.2f} (min), {vmax:.2f} (max)"
     ax.text(0.05, 0.02, s, ha="left", va="bottom", transform=ax.transAxes)
+    fig.set_size_inches(8, 6)
+    ax.set_position([0.15, 0.15, 0.75, 0.75])  # type: ignore

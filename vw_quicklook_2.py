@@ -4,6 +4,7 @@ import tkinter as tk
 from pathlib import Path
 from tkinter import filedialog
 from typing import Optional
+from typing import Tuple, List
 
 import numpy as np
 from astropy.io import fits
@@ -14,7 +15,7 @@ from matplotlib.widgets import Button
 _logger = logging.getLogger("vw_quicklook")
 
 
-def _find_fits_list() -> list[Path]:
+def _find_fits_list() -> List[Path]:
     fits_files = sorted(Path(".").glob("vw*.fits"), key=lambda x: x.stat().st_mtime)
     return fits_files
 
@@ -33,7 +34,7 @@ def _sanitize_fpath(f_in: Optional[str]) -> Path:
 
 
 def _get_fiberpos() -> np.ndarray:
-    fpath = Path(__file__).parent / "assets/IFUcen.txt"
+    fpath = Path(__file__).parent / "vw_explorer/assets/IFUcen.txt"
     if not fpath.exists():
         raise FileNotFoundError(f"Fiber position file not found at {fpath}")
     fiberpos = np.loadtxt(fpath, comments="#")
@@ -57,7 +58,7 @@ def plot_ifu_data(fiberpos: np.ndarray, flux: np.ndarray, title: str, cmap: str)
     plt.show()
 
 
-def load_data(fits_path: Path) -> tuple[np.ndarray, np.ndarray]:
+def load_data(fits_path: Path) -> Tuple[np.ndarray, np.ndarray]:
     """
     Loads the FITS data and extracts fluxes for each fiber.
     """
@@ -103,7 +104,7 @@ def load_data(fits_path: Path) -> tuple[np.ndarray, np.ndarray]:
 
 
 class QuickLookViewer:
-    def __init__(self, files: list[Path], cmap: str = "gray"):
+    def __init__(self, files: List[Path], cmap: str = "gray"):
         if not files:
             raise FileNotFoundError("No FITS files to browse.")
         self.files = files
@@ -159,9 +160,9 @@ class QuickLookViewer:
         self.scat = self.ax.scatter(
             self.fiberpos[:, 1], self.fiberpos[:, 2], 220.0, marker="h", color=colors
         )
-        if hasattr(self, "cbar"):
-            self.cbar.remove()
-        self.cbar = self.fig.colorbar(self.scat, ax=self.ax, orientation="vertical")
+        # if hasattr(self, "cbar"):
+        #     self.cbar.remove()
+        # self.cbar = self.fig.colorbar(self.scat, ax=self.ax, orientation="vertical")
         self.title_text.set_text(title)
         self.fig.canvas.draw_idle()
 

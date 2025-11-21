@@ -11,6 +11,8 @@ def load_dither_chunk(target_name: str, chunk_index: int
 ) -> "DitherChunk":
     """
     Loads a specific dither chunk from a DataFrame.
+    Note that information on Observations is ONLY loaded from
+    the fits files!
 
     Parameters
     ----------
@@ -27,6 +29,7 @@ def load_dither_chunk(target_name: str, chunk_index: int
         The requested DitherChunk object.
     """
     from ..classes import DitherChunk
+    from .observation_loading import load_obs_df
 
     chunks_df = load_dither_chunk_dataframe()
     chunk_series = chunks_df[
@@ -34,12 +37,17 @@ def load_dither_chunk(target_name: str, chunk_index: int
         & (chunks_df["target"] == target_name)
     ]
     if chunk_series.empty:
+        avail_targets = chunks_df["target"].unique()
         raise ValueError(
-            f"No dither chunk found for target '{target_name}' with chunk index {chunk_index}."
+            f"No dither chunk with index {chunk_index} found for target '{target_name}'. Available targets are:\n{avail_targets}"
         )
-
+    try:
+        obs_df = load_obs_df()
+    except Exception as e:
+        obs_df = None
+        LOGGER.error(f"Failed to load observations: {e}, will load them from fits files instead.")
     # Convert the Series to a DitherChunk
-    return DitherChunk.from_series(chunk_series.iloc[0])
+    return DitherChunk.from_series(chunk_series.iloc[0], obs_df=obs_df)
 
 def load_dither_chunk_dataframe(backup_fpath=OUTPUT_PATH / "dither_chunks.csv", observations: Optional[List["Observation"]] = None) -> pd.DataFrame:
     """
@@ -60,6 +68,11 @@ def load_dither_chunk_dataframe(backup_fpath=OUTPUT_PATH / "dither_chunks.csv", 
         LOGGER.debug(
             f"Skipping dither chunk generation, loading chunks from backup CSV at {backup_fpath}."
         )
+        # parse list columns:
+        for col in ["observation_names", "observation_paths"]:
+            chunks_df[col] = chunks_df[col].apply(
+                    lambda x: [item.strip().strip("'") for item in x.strip("[]").split(",")]
+                )
         return chunks_df
     if observations is None:
         raise ValueError(

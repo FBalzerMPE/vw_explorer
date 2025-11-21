@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, List
 
+from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 
 from ..logger import LOGGER
@@ -27,6 +28,14 @@ class MultiFilePlotter:
     perform_plot: Callable[[Path], None]
     """Function to perform the plotting for a given file."""
     current_index: int = field(default=0, init=False)
+    fig: Figure = field(init=False)
+    """Matplotlib figure for plotting."""
+
+    def __post_init__(self):
+        if not self.fpaths:
+            raise ValueError("No file paths provided for plotting.")
+        self.fig = plt.figure(figsize=(7, 5))
+        self.show()
 
     def _update_plot(self):
         """
@@ -35,13 +44,15 @@ class MultiFilePlotter:
         Clears the current figure and redraws the plot for the file at the
         current index.
         """
-        plt.clf()  # Clear the current figure
+        plt.clf()
         fpath = self.fpaths[self.current_index]
         self.perform_plot(fpath)
         plt.title(
             f"File: {fpath.name} ({self.current_index + 1}/{len(self.fpaths)}) [use arrow keys]"
         )
+        plt.subplots_adjust(bottom=0.15)
         plt.draw()
+
 
     def _on_next(self, event=None):
         """

@@ -42,7 +42,7 @@ def main():
         fiberpos, flux = load_ifu_data(fpath)
         plot_ifu_data(fiberpos, flux, "", cmap=args.cmap)
 
-    MultiFilePlotter(filepaths, plot_ifu).show()
+    MultiFilePlotter(filepaths, plot_ifu)
 
 
 if __name__ == "__main__":

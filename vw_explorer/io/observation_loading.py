@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, List, Optional
 
 import pandas as pd
+from typing_extensions import Literal
 
 from ..constants import OUTPUT_PATH
 from ..logger import LOGGER
@@ -12,6 +13,26 @@ if TYPE_CHECKING:
     from ..classes import Observation
 
 
+def load_obs_df(which: Literal["raw", "processed"] = "raw") -> pd.DataFrame:
+    """
+    Loads the observation DataFrame from a backup CSV file.
+
+    Parameters
+    ----------
+    backup_path : Path
+        Path to the backup CSV file.
+
+    Returns
+    -------
+    pd.DataFrame
+        DataFrame containing observation data.
+    """
+    backup_path = OUTPUT_PATH / f"observations_{which}.csv"
+    obs_df = pd.read_csv(backup_path)
+    LOGGER.debug(
+        f"Loaded {len(obs_df)} observations from backup CSV at {backup_path}."
+    )
+    return obs_df
 
 def load_observations(
     logfile_path: Optional[Path] = None,
@@ -27,12 +48,12 @@ def load_observations(
 
     logfile_path = Path(logfile_path) if logfile_path else None
     if backup_path.exists() and not force_log_reload:
-        obs_df = pd.read_csv(backup_path)
-        df = Observation.from_dataframe(obs_df)
-        LOGGER.info(
-            f"Skipping log parsing, loading {len(df)} observations from backup CSV."
+        obs_df = load_obs_df(which="raw")
+        obs_list = Observation.from_dataframe(obs_df)
+        LOGGER.debug(
+            f"Skipping log parsing, loading {len(obs_list)} observations from backup CSV."
         )
-        return df
+        return obs_list
     if logfile_path is None:
         raise ValueError(
             "Logfile path must be provided if no backup CSV exists or `force_log_reload` is True."

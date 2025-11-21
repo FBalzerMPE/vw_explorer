@@ -114,7 +114,11 @@ class ObservationSequence:
     def get_guider_sequences(
         self, reload: bool = False, remove_failed: bool = True
     ) -> List[GuiderSequence]:
-        """Returns the list of GuiderSequence objects for the observations."""
+        """Returns the list of GuiderSequence objects for the observations.
+        If all observations are calibration frames, returns an empty list.
+        """
+        if all(obs.is_calibration_obs for obs in self):
+            return []
         if self._guider_sequences is None or reload:
             self._load_guider_sequences(reload=reload, remove_failed=remove_failed)
         return self._guider_sequences  # type: ignore
