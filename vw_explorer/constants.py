@@ -17,10 +17,12 @@ OUTPUT_PATH = Path(CONFIG["paths"]["output_dir"])
 
 CALIB_NAMES = [
     "biases",
+    "unknown",
     "autofocus",
     "domeflats",
     "domeflat",
     "flats",
+    "bias",
     "arcs",
     "test",
     "tests",
