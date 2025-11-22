@@ -23,8 +23,14 @@ def _symmetrize_axis_limits(ax: Axes, min_width: Optional[float] = None):
     if min_width is not None:
         x_range = max(x_range, min_width / 2)
         y_range = max(y_range, min_width / 2)
-    ax.set_xlim(x_center - x_range, x_center + x_range)
-    ax.set_ylim(y_center - y_range, y_center + y_range)
+    xmin, xmax = x_center - x_range, x_center + x_range
+    ymin, ymax = y_center - y_range, y_center + y_range
+    xmin = max(0, xmin)
+    ymin = max(0, ymin)
+    xmax = min(xmax, 512)
+    ymax = min(ymax, 512)
+    ax.set_xlim(xmin, xmax)
+    ax.set_ylim(ymin, ymax)
 
 def _generate_centroid_legend(ax: Axes, **kwargs):
     """Generate a legend for centroid plots."""

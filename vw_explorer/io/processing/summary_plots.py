@@ -77,11 +77,18 @@ def generate_dither_chunk_plots(
     dither_chunk_dir.mkdir(parents=True, exist_ok=True)
     LOGGER.info(f"Trying to generate plots for {len(dither_chunks)} dither chunks...")
     for chunk in tqdm(dither_chunks, desc="Generating dither chunk plots"):
+        total_frames = 0
         for gseq in chunk.obs_seq.get_guider_sequences():
             if len(gseq) == 0:
                 continue
             plot_path = obs_plot_dir / f"{gseq.observation.filename}_summary.png"
             _plot_guider_sequence(gseq, plot_path)
+            total_frames += len(gseq)
+        if total_frames == 0:
+            LOGGER.warning(
+                f"Dither chunk '{chunk.target}', DC{chunk.chunk_index}: No guider frames found, skipping plot."
+            )
+            continue
         chunk_plot_path = dither_chunk_dir / f"dither_chunk_{chunk.target}_{chunk.chunk_index}_summary.png"
         _plot_dither_chunk_summary(chunk, chunk_plot_path)
 

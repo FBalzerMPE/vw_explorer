@@ -355,11 +355,13 @@ class Observation:
         self.target = t_parts[0].strip().replace("PGC", "P")
         if len(t_parts) > 1:
             try:
-                self.dither = int(t_parts[1].strip()) + 1
+                new_dither = int(t_parts[1].strip()) + 1
             except ValueError:
-                self.dither = 1
+                new_dither = 1
         else:
-            self.dither = 1
+            new_dither = 1
+        if new_dither != 1:
+            self.dither = new_dither
         self.exptime = header.get("EXPTIME", float("nan"))
         self.focus = header.get("FOCUS", float("nan"))
         self.airmass = header.get("AIRMASS", float("nan"))

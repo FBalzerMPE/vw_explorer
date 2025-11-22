@@ -24,6 +24,7 @@ CALIB_NAMES = [
     "domeflat",
     "flats",
     "arcs",
+    "nehg",  # Neon, Hg calibration lamps
     "skyflats",
     "twilight",
     "twilights",
