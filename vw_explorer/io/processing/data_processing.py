@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List
+from typing import List, Tuple
 from tqdm import tqdm
 import pandas as pd
 
@@ -51,7 +51,11 @@ def _get_dither_chunk_mapping(observations: List[Observation]) -> dict:
         LOGGER.warning(f"No dither chunk found for observation {obs.filename}.")
     return chunk_mapping
 
-def process_observation_data(logfile_path: Path, force_log_reload: bool = True) -> pd.DataFrame:
+def process_observation_data(logfile_path: Path, force_log_reload: bool = True) -> Tuple[pd.DataFrame, List[DitherChunk]]:
+    """ Processes observation data from the log file and generates a DataFrame.
+    Returns the DataFrame and list of DitherChunk objects which can be used
+    for further processing as they contain the fitted guide star information.
+    """
     observations = load_observations(
         logfile_path=logfile_path, force_log_reload=force_log_reload
     )
@@ -68,4 +72,4 @@ def process_observation_data(logfile_path: Path, force_log_reload: bool = True) 
     final_df = obs_df.merge(seqs_df, on="filename", how="left")
     output_file = OUTPUT_PATH / "observations_processed.csv"
     save_observations_to_csv(final_df, output_file)
-    return final_df
+    return final_df, chunks

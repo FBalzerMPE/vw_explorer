@@ -42,14 +42,17 @@ def parse_args():
 
 def main():
     args = parse_args()
+    chunks = None
     if args.generate_dataframe:
         logfile_path = _sanitize_logfile_path(args.logfile_path)
         if logfile_path is None:
             raise ValueError("No log file found.")
-        process_observation_data(logfile_path, force_log_reload=True)
+        _, chunks = process_observation_data(logfile_path, force_log_reload=True)
     if args.produce_plots:
         output_dir = DATA_PATH / "output"
-        generate_dither_chunk_plots(output_dir)
+        if chunks is None:
+            LOGGER.info("No prior processing done, thus the loading times will be longer.")
+        generate_dither_chunk_plots(output_dir, chunks)
     if not args.generate_dataframe and not args.produce_plots:
         print("No action specified. Use --generate_dataframe and/or --produce_plots.")
 if __name__ == "__main__":

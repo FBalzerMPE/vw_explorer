@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import List, Optional
 from tqdm import tqdm
 
 import matplotlib.pyplot as plt
@@ -54,6 +55,7 @@ def _plot_dither_chunk_summary(chunk: DitherChunk, output_path: Path):
 
 def generate_dither_chunk_plots(
     output_dir: Path,
+    dither_chunks: Optional[List[DitherChunk]] = None,
 ):
     """
     Generates and saves plots for each dither chunk.
@@ -65,11 +67,11 @@ def generate_dither_chunk_plots(
     output_dir : Path
         Directory to save the plots.
     """
-    observations = load_observations()
-    observations = [obs for obs in observations if not obs.is_calibration_obs]
-    ch_dict = DitherChunk.get_all_dither_chunks(observations)
-    dither_chunks = [ch for ch_list in ch_dict.values() for ch in ch_list]
-
+    if dither_chunks is None:
+        observations = load_observations()
+        observations = [obs for obs in observations if not obs.is_calibration_obs]
+        ch_dict = DitherChunk.get_all_dither_chunks(observations)
+        dither_chunks = [ch for ch_list in ch_dict.values() for ch in ch_list]
     plot_dir = output_dir / "plots"
     obs_plot_dir = plot_dir / "observations"
     obs_plot_dir.mkdir(parents=True, exist_ok=True)
