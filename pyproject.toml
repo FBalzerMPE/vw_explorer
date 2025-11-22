@@ -25,7 +25,8 @@ dependencies = [
     "scipy>=1.0,<1.1",
     "dataclasses",
     "typing-extensions",
-    "pyyaml"
+    "pyyaml",
+    "tqdm",
 ]
 requires-python = ">=3.6"
 

@@ -60,8 +60,9 @@ def process_observation_data(logfile_path: Path, force_log_reload: bool = True) 
     obs_df["dither_chunk_index"] = obs_df["filename"].map(chunk_map)
     ch_dict = DitherChunk.get_all_dither_chunks(observations)
     chunks = [ch for ch_list in ch_dict.values() for ch in ch_list]
-    LOGGER.info(f"Processing {len(chunks)} dither chunks from observations. Loading all guider sequences might take a while as we're fitting the guide stars.")
-    guider_sequences = [g_seq for ch in tqdm(chunks, desc="Loading guider sequences") for g_seq in ch.obs_seq.get_guider_sequences()]
+    relevant_chunks = [ch for ch in chunks if not ch.is_calibration_obs]
+    LOGGER.info(f"Found {len(chunks)} dither chunks, of which {len(relevant_chunks)} are from non-calibration observations.\nLoading all guider sequences for those might take a while as we're fitting the guide stars.")
+    guider_sequences = [g_seq for ch in tqdm(relevant_chunks, desc="Loading guider sequences") for g_seq in ch.obs_seq.get_guider_sequences()]
     seqs_df = GuiderSequence.get_combined_stats_df(guider_sequences)
     final_df = obs_df.merge(seqs_df, on="filename", how="left")
     output_file = OUTPUT_PATH / "observations_processed.csv"
