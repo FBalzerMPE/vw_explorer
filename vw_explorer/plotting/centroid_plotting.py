@@ -99,11 +99,11 @@ def plot_centroids_for_single_gseq(
     centroids = gseq.get_centroids()
     x_centroids = centroids[:, 0]
     y_centroids = centroids[:, 1]
-    title = "Fitted Centroid Positions"
+    title = "Sky pos."
     if x_0 is not None and y_0 is not None:
         x_centroids = x_centroids - x_0
         y_centroids = y_centroids - y_0
-        title += f" (Relative to ({x_0:.1f}, {y_0:.1f}))"
+        title += f" (Rel. to ({x_0:.1f}, {y_0:.1f}))"
 
     scatter_kwargs.setdefault("s", 30)
     scatter_kwargs.setdefault("marker", "x")
@@ -181,7 +181,7 @@ def plot_centroids_for_single_gseq(
         capsize=4,
         label="Mean ± Stddev",
     )
-    _generate_centroid_legend(ax, loc="lower right", framealpha=0.3)
+    _generate_centroid_legend(ax, loc="upper left", framealpha=0.2)
     if dither is not None:
         ax.text(
             mean_x,

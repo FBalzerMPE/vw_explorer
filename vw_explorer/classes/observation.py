@@ -152,6 +152,9 @@ class Observation:
             else ObsTimeslot.from_start_and_time(self.start_time_ut, self.exptime)
         )
 
+    def __str__(self) -> str:
+        return f"Observation: {self.filename} ({self.target}, dither {self.dither})"
+
     @classmethod
     def from_fits(
         cls, fpath: Path, fid_x: float = float("nan"), fid_y: float = float("nan"), fwhm_noted: float = float("nan")
@@ -294,13 +297,9 @@ class Observation:
         return s
 
     @property
-    def is_sky_obs(self) -> bool:
-        return not math.isnan(self.airmass)
-
-    @property
     def is_calibration_obs(self) -> bool:
         """Is this observation a calibration frame (bias, dark, flat, etc.)?"""
-        return any(name in self.target.lower() for name in CALIB_NAMES)
+        return self.target.lower() in CALIB_NAMES
 
     @property
     def file_available(self) -> bool:
@@ -315,9 +314,11 @@ class Observation:
             s += f"  Time slot: {self.timeslot.summary}\n"
         else:
             s += f"  Start time (UT): {self.start_time_ut.isoformat()}\n"
-        if self.is_sky_obs:
+        if not self.is_calibration_obs:
             s += f"  Airmass: {self.airmass:.2f}\n"
             s += f"  FWHM: {self.fwhm_noted:.2f} arcsec\n"
+        else:
+            s += f"  (Calibration observation)\n"
         if not math.isnan(self.exptime):
             s += f"  Exposure time per frame: {self.exptime:.1f} s\n"
         if self.comments:

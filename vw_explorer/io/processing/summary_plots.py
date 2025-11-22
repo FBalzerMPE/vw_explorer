@@ -24,10 +24,11 @@ def _plot_guider_sequence(gseq: GuiderSequence, output_path: Path):
         fig = gseq.plot_summary()
         fig.suptitle(f"{gseq.observation.long_name}", fontsize=16)
         fig.savefig(str(output_path), dpi=150, bbox_inches="tight")
-        plt.close(fig)
         LOGGER.debug(f"Saved guider sequence plot to {output_path}")
     except Exception as e:
-        LOGGER.warning(f"Error generating guider sequence plot: {e}")
+        LOGGER.warning(f"Error generating guider sequence plot for {gseq.observation}: {e}")
+    finally:
+        plt.close()
 
 
 def _plot_dither_chunk_summary(chunk: DitherChunk, output_path: Path):
@@ -45,10 +46,11 @@ def _plot_dither_chunk_summary(chunk: DitherChunk, output_path: Path):
         chunk.plot_summary()
         fig = plt.gcf()
         fig.savefig(str(output_path), dpi=150, bbox_inches="tight")
-        plt.close(fig)
         LOGGER.debug(f"Saved dither chunk summary plot to {output_path}")
     except Exception as e:
-        LOGGER.warning(f"Error generating dither chunk summary plot: {e}")
+        LOGGER.warning(f"Error generating dither chunk summary plot for {chunk}: {e}")
+    finally:
+        plt.close()
 
 def generate_dither_chunk_plots(
     output_dir: Path,
@@ -67,7 +69,6 @@ def generate_dither_chunk_plots(
     observations = [obs for obs in observations if not obs.is_calibration_obs]
     ch_dict = DitherChunk.get_all_dither_chunks(observations)
     dither_chunks = [ch for ch_list in ch_dict.values() for ch in ch_list]
-    dither_chunks = [ch for ch in dither_chunks if ch.is_sky_obs]
 
     plot_dir = output_dir / "plots"
     obs_plot_dir = plot_dir / "observations"

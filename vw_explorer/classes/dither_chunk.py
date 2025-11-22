@@ -33,6 +33,9 @@ class DitherChunk:
             f"num_obs={len(self)}, "
             f"time_range=({start_time}, {end_time}))"
         )
+    
+    def __str__(self) -> str:
+        return f"{self.target} - Chunk {self.chunk_index}"
 
     @property
     def time_range(self) -> Tuple[datetime, datetime]:
@@ -54,9 +57,9 @@ class DitherChunk:
         return mean_x, mean_y
     
     @property
-    def is_sky_obs(self) -> bool:
-        """Checks if all observations in the chunk are sky observations."""
-        return all(obs.is_sky_obs for obs in self.obs_seq.observations)
+    def is_calibration_obs(self) -> bool:
+        """Checks if all observations in the chunk are calibration observations."""
+        return all(obs.is_calibration_obs for obs in self.obs_seq.observations)
 
     @classmethod
     def from_observations(
@@ -200,7 +203,7 @@ class DitherChunk:
                 "observation_paths": [str(obs.fpath) for obs in chunk.obs_seq],
                 "fid_x_mean": fid_coords[0],
                 "fid_y_mean": fid_coords[1],
-                "is_sky_obs": chunk.is_sky_obs,
+                "is_calibration_obs": chunk.is_calibration_obs,
             }
             records.append(record)
         df = pd.DataFrame.from_records(records)

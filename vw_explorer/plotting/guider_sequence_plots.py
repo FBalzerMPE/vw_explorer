@@ -72,7 +72,7 @@ def create_guider_gif(
     return out_path
 
 def plot_guider_sequence_summary(gseq: GuiderSequence) -> Figure:
-    fig, axes = plt.subplots(2, 2, figsize=(8, 8), gridspec_kw={"height_ratios": [2, 1]})
+    fig, axes = plt.subplots(2, 2, figsize=(8, 7), gridspec_kw={"height_ratios": [3, 1]})
     gseq.plot_initial_frame(ax=axes[0, 0], center_around="fiducial", cutout_size=70)
     gseq.plot_centroid_positions("fiducial", ax=axes[0, 1])
     gseq.plot_fwhm_timeseries(ax=axes[1, 0])

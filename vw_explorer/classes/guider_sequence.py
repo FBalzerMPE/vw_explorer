@@ -30,6 +30,9 @@ class GuiderSequence:
 
     def __len__(self) -> int:
         return len(self.frames)
+    
+    def __str__(self) -> str:
+        return f"GuiderSequence for {self.observation}"
 
     def _fit_all(
         self,

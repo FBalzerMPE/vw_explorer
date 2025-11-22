@@ -114,7 +114,7 @@ def plot_amplitudes_for_single_gseq(
     )
     ax.text(
         0.95,
-        0.95,
+        0.02,
         f"Mean Amplitude: ${mean_amp:.2f}\\pm {std_amp:.2f}$",
         transform=ax.transAxes,
         ha="right",

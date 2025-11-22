@@ -26,5 +26,5 @@ def get_target_counts(
         A Counter object with target names as keys and their counts as values.
     """
     if remove_calib:
-        observations = [obs for obs in observations if obs.target not in CALIB_NAMES]
+        observations = [obs for obs in observations if not obs.is_calibration_obs]
     return Counter(obs.target for obs in observations)

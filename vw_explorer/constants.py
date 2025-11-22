@@ -19,6 +19,7 @@ CALIB_NAMES = [
     "biases",
     "autofocus",
     "domeflats",
+    "domeflat",
     "flats",
     "arcs",
     "test",

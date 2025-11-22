@@ -8,7 +8,8 @@ from matplotlib.figure import Figure
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from typing_extensions import Literal
 from ..classes import GuiderFrame, GuideStarModel, Observation
-
+from .util import add_scale_bar
+from ..constants import GUIDER_PIXSCALE
 
 def plot_img_data(
     data: np.ndarray,
@@ -29,12 +30,9 @@ def plot_img_data(
     ax.set_axis_off()
     ax.set_aspect("equal", adjustable="box")
     divider = make_axes_locatable(ax)
-    cax = divider.append_axes("right", size=cbar_size, pad=cbar_pad)
     if add_cbar:
+        cax = divider.append_axes("right", size=cbar_size, pad=cbar_pad)
         ax.get_figure().colorbar(im, cax=cax)
-    else:
-        # hide the reserved cax so it still consumes space but doesn't draw
-        cax.set_visible(False)
 
 def _prepare_frame_data(
     frame: GuiderFrame, mean_coords: Optional[Tuple[float, float]] = None, cutout_size: int = 20, 
@@ -55,9 +53,12 @@ def plot_frame_cutout(
     ax = plt.gca() if ax is None else ax
     data = _prepare_frame_data(frame, mean_coords, cutout_size=cutout_size)
     plot_img_data(data, ax=ax, **kwargs)
+    ax.set_axis_on()
     if mean_coords is not None:
         ax.plot(cutout_size // 2, cutout_size // 2, "bx", markersize=12)
         ax.text(cutout_size // 2 + 2, cutout_size // 2 + 2, f"{mean_coords[0]:.1f}, {mean_coords[1]:.1f}", color="b", bbox=dict(facecolor="white", alpha=0.7))
+    len_bar = 5 if mean_coords is not None else 50
+    add_scale_bar(ax, GUIDER_PIXSCALE, length_arcsec=len_bar, location="lower left", color="red")
     return ax
 
 def plot_guidefit_model(

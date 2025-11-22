@@ -124,11 +124,11 @@ def plot_fwhms_for_single_gseq(
     )
     ax.text(
         0.95,
-        0.05,
+        0.02,
         f"Mean FWHM: ${mean_fwhm:.2f}\\pm {std_fwhm:.2f}$ arcsec",
         transform=ax.transAxes,
         ha="right",
-        va="top",
+        va="bottom",
         color="red",
     )
 
