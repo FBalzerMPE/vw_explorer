@@ -14,6 +14,10 @@ def get_clipped_mask_by_distance(
     """
     if sigmaclip_val is None:
         return np.ones(centroids.shape[0], dtype=bool)
+    if len(centroids) == 0:
+        return np.array([], dtype=bool)
+    if centroids.shape[0] == 1:
+        return np.array([True], dtype=bool)
 
     med = np.median(centroids, axis=0)
     d = np.hypot(centroids[:, 0] - med[0], centroids[:, 1] - med[1])
