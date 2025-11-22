@@ -1,13 +1,12 @@
 from pathlib import Path
 from typing import List
-
+from tqdm import tqdm
 import pandas as pd
 
 from ...classes import GuiderSequence, Observation, DitherChunk
 from ...constants import OUTPUT_PATH
 from ...logger import LOGGER
 from ..observation_loading import load_observations
-from .summary_plots import generate_dither_chunk_plots
 from ..dither_chunk_loading import load_dither_chunk_dataframe
 
 def save_observations_to_csv(df: pd.DataFrame, output_file: Path):
@@ -62,7 +61,7 @@ def process_observation_data(logfile_path: Path, force_log_reload: bool = True) 
     ch_dict = DitherChunk.get_all_dither_chunks(observations)
     chunks = [ch for ch_list in ch_dict.values() for ch in ch_list]
     LOGGER.info(f"Processing {len(chunks)} dither chunks from observations. Loading all guider sequences might take a while as we're fitting the guide stars.")
-    guider_sequences = [g_seq for ch in chunks for g_seq in ch.obs_seq.get_guider_sequences()]
+    guider_sequences = [g_seq for ch in tqdm(chunks, desc="Loading guider sequences") for g_seq in ch.obs_seq.get_guider_sequences()]
     seqs_df = GuiderSequence.get_combined_stats_df(guider_sequences)
     final_df = obs_df.merge(seqs_df, on="filename", how="left")
     output_file = OUTPUT_PATH / "observations_processed.csv"

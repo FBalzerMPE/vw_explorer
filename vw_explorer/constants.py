@@ -16,18 +16,18 @@ OUTPUT_PATH = Path(CONFIG["paths"]["output_dir"])
 """The path to the output directory."""
 
 CALIB_NAMES = [
-    "biases",
     "unknown",
+    "biases",
+    "bias",
     "autofocus",
     "domeflats",
     "domeflat",
     "flats",
-    "bias",
     "arcs",
-    "test",
-    "tests",
     "skyflats",
     "twilight",
     "twilights",
+    "test",
+    "tests",
 ]
 """List of standard calibration observation names."""

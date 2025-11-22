@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List
+from tqdm import tqdm
 
 import matplotlib.pyplot as plt
 
@@ -75,8 +75,8 @@ def generate_dither_chunk_plots(
     obs_plot_dir.mkdir(parents=True, exist_ok=True)
     dither_chunk_dir = plot_dir / "dither_chunks"
     dither_chunk_dir.mkdir(parents=True, exist_ok=True)
-    
-    for chunk in dither_chunks:
+    LOGGER.info(f"Trying to generate plots for {len(dither_chunks)} dither chunks...")
+    for chunk in tqdm(dither_chunks, desc="Generating dither chunk plots"):
         for gseq in chunk.obs_seq.get_guider_sequences():
             if len(gseq) == 0:
                 continue

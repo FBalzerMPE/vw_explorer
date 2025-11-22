@@ -1,16 +1,20 @@
 from pathlib import Path
+from typing import Optional
 
-from vw_explorer.io.processing.data_processing import process_observation_data, generate_dither_chunk_plots
+from vw_explorer.io.processing.data_processing import process_observation_data
+from vw_explorer.io.processing.summary_plots import generate_dither_chunk_plots
 from vw_explorer import DATA_PATH
+from vw_explorer.logger import LOGGER
 import argparse
 
-def _sanitize_logfile_path(logfile_path: Path) -> Path:
-    logfile_path = Path(logfile_path)
+def _sanitize_logfile_path(input_path: Optional[Path]) -> Optional[Path]:
+    logfile_path = DATA_PATH  if input_path is None else Path(input_path)
     if logfile_path.is_dir():
-        logfile_path = logfile_path / "observation_log.csv"
+        logfile_path = logfile_path / "log.txt"
     if not logfile_path.exists():
-        logfile_path = DATA_PATH / logfile_path
-    assert logfile_path.exists(), f"Log file {logfile_path} does not exist."
+        return None
+    if input_path is None:
+        LOGGER.info(f"No log file provided, using default at {logfile_path}")
     return logfile_path
 
 def parse_args():
@@ -39,9 +43,9 @@ def parse_args():
 def main():
     args = parse_args()
     if args.generate_dataframe:
-        if args.logfile_path is None:
-            raise ValueError("Logfile path must be provided to generate the dataframe.")
         logfile_path = _sanitize_logfile_path(args.logfile_path)
+        if logfile_path is None:
+            raise ValueError("No log file found.")
         process_observation_data(logfile_path, force_log_reload=True)
     if args.produce_plots:
         output_dir = DATA_PATH / "output"
