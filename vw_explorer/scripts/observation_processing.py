@@ -54,6 +54,6 @@ def main():
             LOGGER.info("No prior processing done, thus the loading times will be longer.")
         generate_dither_chunk_plots(output_dir, chunks)
     if not args.generate_dataframe and not args.produce_plots:
-        print("No action specified. Use --generate_dataframe and/or --produce_plots.")
+        LOGGER.warning("No action specified. Use --generate_dataframe and/or --produce_plots.")
 if __name__ == "__main__":
     main()
