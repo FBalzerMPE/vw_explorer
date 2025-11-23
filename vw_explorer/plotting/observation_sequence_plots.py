@@ -4,15 +4,14 @@ from matplotlib.gridspec import GridSpec
 from vw_explorer.classes.dither_chunk import DitherChunk
 
 from ..logger import LOGGER
-from .amplitude_plotting import plot_amplitude_series
-from .fwhm_plotting import plot_fwhm_series
 from .airmass_plotting import plot_airmass_series
 from .centroid_plotting import plot_centroid_series
+from .flux_rate_plotting import plot_flux_rate_series
+from .fwhm_plotting import plot_fwhm_series
 
 
 def plot_dither_chunk_summary(dchunk: DitherChunk):
-    """Plots a summary of the guider sequences within a dither chunk.
-    """
+    """Plots a summary of the guider sequences within a dither chunk."""
     oseq = dchunk.obs_seq
     summary = oseq.get_summary(max_line_length=40)
     gseq = oseq.get_guider_sequences(remove_failed=True)
@@ -44,5 +43,5 @@ def plot_dither_chunk_summary(dchunk: DitherChunk):
     plot_centroid_series(gseq, ax1, dithers)
     plot_airmass_series(oseq, ax2)
     plot_fwhm_series(gseq, oseq, ax3)
-    plot_amplitude_series(gseq, oseq, ax4)
+    plot_flux_rate_series(gseq, oseq, ax4)
     fig.tight_layout(rect=[0, 0.03, 1, 0.95], h_pad=0.1)  # type: ignore

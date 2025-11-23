@@ -1,8 +1,9 @@
+"""This is deprecated for now."""
+
 import argparse
-from pathlib import Path
 from typing import Tuple
 
-from vw_explorer.classes import ObservationSequence
+from vw_explorer.classes import DitherChunk
 from vw_explorer.display.multi_file_plot import MultiFilePlotter
 from vw_explorer.io import infer_vw_filenames
 from vw_explorer.logger import LOGGER
@@ -11,12 +12,24 @@ from vw_explorer.logger import LOGGER
 def parse_args():
     parser = argparse.ArgumentParser(description="Quicklook for VIRUS-W IFU images.")
     parser.add_argument(
-        "fiducial_coords",
+        "--target",
+        type=str,
+        default=None,
+        help="The name of the target object to display.",
+    )
+    parser.add_argument(
+        "--dither_chunk_index",
+        type=int,
+        default=0,
+        help="The dither chunk index to visualize.",
+    )
+    parser.add_argument(
+        "--fiducial_coords",
         type=str,
         help="Fiducial coordinates for the guider in the format 'x,y' (e.g., '512.1,512').",
     )
     parser.add_argument(
-        "fpaths",
+        "--fpaths",
         type=str,
         nargs="?",
         default=None,
@@ -55,11 +68,10 @@ def main():
     filepaths = infer_vw_filenames(args.fpaths)
     LOGGER.info(f"Found {len(filepaths)} file(s).")
     fid_x, fid_y = _parse_fiducial_coords(args.fiducial_coords)
-    seq = ObservationSequence.from_filenames(filepaths)
+    seq = DitherChunk.from_filenames(filepaths)
     for obs in seq.observations:
         obs.fiducial_coords = (fid_x, fid_y)
     LOGGER.info(f"Observation Sequence Summary:\n{seq}")
-    seq.plot
     import matplotlib.pyplot as plt
 
     plt.show()

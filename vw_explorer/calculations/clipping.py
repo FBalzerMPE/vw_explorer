@@ -6,7 +6,7 @@ import numpy as np
 from astropy.stats import sigma_clip
 
 
-def get_clipped_mask_by_distance(
+def get_clipping_kept_mask_by_distance(
     centroids: np.ndarray, sigmaclip_val: Optional[float] = 2.5, **kwargs
 ) -> np.ndarray:
     """Returns a boolean mask indicating which (x, y) centroids are kept after sigma-clipping.
@@ -26,7 +26,7 @@ def get_clipped_mask_by_distance(
     return good_mask
 
 
-def get_clipped_mask(
+def get_clipping_kept_mask(
     values: np.ndarray, sigmaclip_val: Optional[float] = 2.5, **kwargs
 ) -> np.ndarray:
     """Returns a boolean mask indicating which values are kept after sigma-clipping.

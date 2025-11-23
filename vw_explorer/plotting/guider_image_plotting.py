@@ -46,17 +46,23 @@ def plot_frame_cutout(
     mean_coords: Optional[Tuple[float, float]] = None,
     cutout_size: int = 20,
     ax: Optional[Axes] = None,
+    fid_coords: Optional[Tuple[float, float]] = None,
     **kwargs,
 ) -> Axes:
     """Plots data from the given guider frame in context of the observation.
     """
     ax = plt.gca() if ax is None else ax
     data = _prepare_frame_data(frame, mean_coords, cutout_size=cutout_size)
+    kwargs.setdefault("norm", LogNorm(vmin=np.percentile(data, 20), vmax=np.percentile(data, 95)))
     plot_img_data(data, ax=ax, **kwargs)
     ax.set_axis_on()
     if mean_coords is not None:
         ax.plot(cutout_size // 2, cutout_size // 2, "bx", markersize=12)
         ax.text(cutout_size // 2 + 2, cutout_size // 2 + 2, f"{mean_coords[0]:.1f}, {mean_coords[1]:.1f}", color="b", bbox=dict(facecolor="white", alpha=0.7))
+    elif fid_coords is not None:
+        ax.plot(*fid_coords, "bo", markersize=20, markerfacecolor="none", markeredgewidth=2)
+        ax.text(fid_coords[0] + 20, fid_coords[1] + 20, f"{fid_coords[0]:.1f}, {fid_coords[1]:.1f}", color="b", bbox=dict(facecolor="white", alpha=0.7))
+
     len_bar = 5 if mean_coords is not None else 50
     add_scale_bar(ax, GUIDER_PIXSCALE, length_arcsec=len_bar, location="lower left", color="red")
     return ax

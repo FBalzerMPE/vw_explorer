@@ -72,7 +72,11 @@ def _find_vw_files(
 
 def infer_vw_filenames(f_in: Optional[str]) -> List[Path]:
     if f_in is not None:
-        filenames = [Path(f) for f in parse_vw_filenames(f_in, add_fits_extension=True)]
+        paths = f_in.split(",")
+        filenames = []
+        for p in paths:
+            filenames.extend(parse_vw_filenames(p, add_fits_extension=True))
+        filenames = [Path(f) for f in filenames]
         return _find_vw_files(filenames)
     fits_files = sorted(Path(".").glob("vw*.fits"))
     if not fits_files:

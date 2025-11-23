@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from typing_extensions import Literal
 
-from ..calculations import get_clipped_mask, get_clipped_mask_by_distance
+from ..calculations import get_clipping_kept_mask, get_clipping_kept_mask_by_distance
 from .guider_frame import GuiderFrame
 from .observation import Observation
 from .star_model_fit import GuideStarModel
@@ -30,7 +30,7 @@ class GuiderSequence:
 
     def __len__(self) -> int:
         return len(self.frames)
-    
+
     def __str__(self) -> str:
         return f"GuiderSequence for {self.observation}"
 
@@ -64,43 +64,43 @@ class GuiderSequence:
         fwhms = np.array([s.get_fwhm_stats() for s in sequences])
         fwhm_means = fwhms[:, 0]
         fwhm_stds = fwhms[:, 1]
-        amplitudes = np.array(
-            [s.get_amplitude_stats(sigmaclip_val=None) for s in sequences]
+        flux_rates = np.array(
+            [s.get_flux_rate_stats(sigmaclip_val=None) for s in sequences]
         )
-        amplitude_means = amplitudes[:, 0]
-        amplitude_stds = amplitudes[:, 1]
+        flux_rate_means = flux_rates[:, 0]
+        flux_rate_stds = flux_rates[:, 1]
         data = {
             "filename": [s.observation.filename for s in sequences],
             "centroid_x_mean": cent_means[:, 0],
             "centroid_y_mean": cent_means[:, 1],
-            "amplitude_mean": amplitude_means,
+            "flux_rate_mean": flux_rate_means,
             "fwhm_mean": fwhm_means,
             "centroid_x_std": cent_stds[:, 0],
             "centroid_y_std": cent_stds[:, 1],
             "fwhm_std": fwhm_stds,
-            "amplitude_std": amplitude_stds,
+            "flux_rate_std": flux_rate_stds,
         }
         return pd.DataFrame(data)
 
-    def get_amplitudes(self, sigmaclip_val: Optional[float] = None) -> np.ndarray:
+    def get_flux_rates(self, sigmaclip_val: Optional[float] = None) -> np.ndarray:
         if sigmaclip_val is None:
-            return np.array([m.amplitude for m in self.models])
-        amplitudes = self.get_amplitudes(sigmaclip_val=None)
-        return amplitudes[get_clipped_mask(amplitudes, sigmaclip_val=sigmaclip_val)]
+            return np.array([m.total_flux_rate for m in self.models])
+        flux_rates = self.get_flux_rates(sigmaclip_val=None)
+        return flux_rates[get_clipping_kept_mask(flux_rates, sigmaclip_val=sigmaclip_val)]
 
-    def get_amplitude_stats(
+    def get_flux_rate_stats(
         self, sigmaclip_val: Optional[float] = None
     ) -> Tuple[float, float]:
-        amplitudes = self.get_amplitudes(sigmaclip_val=sigmaclip_val)
-        if len(amplitudes) == 0:
+        flux_rates = self.get_flux_rates(sigmaclip_val=sigmaclip_val)
+        if len(flux_rates) == 0:
             return np.nan, np.nan
-        return float(np.mean(amplitudes)), float(np.std(amplitudes))
+        return float(np.mean(flux_rates)), float(np.std(flux_rates))
 
     def get_fwhms_arcsec(self, sigmaclip_val: Optional[float] = 2.5) -> np.ndarray:
         if sigmaclip_val is None:
             return np.array([m.fwhm_arcsec for m in self.models])
         fwhms = self.get_fwhms_arcsec(sigmaclip_val=None)
-        return fwhms[get_clipped_mask(fwhms, sigmaclip_val=sigmaclip_val)]
+        return fwhms[get_clipping_kept_mask(fwhms, sigmaclip_val=sigmaclip_val)]
 
     def get_centroids(self, sigmaclip_val: Optional[float] = 2.5) -> np.ndarray:
         """Returns an array of (x, y) centroids from the fitted models."""
@@ -108,7 +108,7 @@ class GuiderSequence:
             return np.array([np.array((m.x_cent, m.y_cent)) for m in self.models])
         centroids = self.get_centroids(sigmaclip_val=None)
         return centroids[
-            get_clipped_mask_by_distance(centroids, sigmaclip_val=sigmaclip_val)
+            get_clipping_kept_mask_by_distance(centroids, sigmaclip_val=sigmaclip_val)
         ]
 
     def get_centroid_stats(
@@ -128,11 +128,14 @@ class GuiderSequence:
         if len(fwhms) == 0:
             return np.nan, np.nan
         return float(np.mean(fwhms)), float(np.std(fwhms))
-    
+
     def get_stacked_frame(self) -> np.ndarray:
         """Returns a normalized stacked frame from all guider frames in the sequence."""
         from ..calculations.image_stacking import stack_frames
-        return stack_frames(self.frames, self.get_centroids(sigmaclip_val=None), sigmaclip_val=2.5)
+
+        return stack_frames(
+            self.frames, self.get_centroids(sigmaclip_val=None), sigmaclip_val=2.5
+        )
 
     def plot_fits(self, idx: Optional[int] = None):
         """Plots the guider frames with their fitted models.
@@ -145,15 +148,23 @@ class GuiderSequence:
             return
         for frame, model in zip(self.frames, self.models):
             plot_guidefit_model(frame, model)
-    
-    def plot_initial_frame(self, center_around: Literal["none", "fiducial", "mean"] = "fiducial", cutout_size: int = 70, **kwargs):
+
+    def plot_initial_frame(
+        self,
+        center_around: Literal["none", "fiducial", "mean"] = "fiducial",
+        cutout_size: int = 70,
+        **kwargs,
+    ):
         """Plots the first guider frame in the sequence with its fitted model."""
         from ..plotting import plot_frame_cutout
+
         mean_coords = None
         if center_around == "mean":
             mean_coords = self.get_centroid_stats(sigmaclip_val=2.5)[0]
         elif center_around == "fiducial":
             mean_coords = self.observation.fiducial_coords
+        else:
+            kwargs["fid_coords"] = self.observation.fiducial_coords
         plot_frame_cutout(self.frames[0], mean_coords, cutout_size, **kwargs)
 
     def plot_centroid_positions(
@@ -178,11 +189,11 @@ class GuiderSequence:
 
         return plot_fwhms_for_single_gseq(self, **scatter_kwargs)
 
-    def plot_amplitude_timeseries(self, annotate_mean: bool = True, **scatter_kwargs):
-        """Plots the amplitude as a function of time."""
-        from ..plotting import plot_amplitudes_for_single_gseq
+    def plot_flux_rate_timeseries(self, annotate_mean: bool = True, **scatter_kwargs):
+        """Plots the flux rates as a function of time."""
+        from ..plotting import plot_flux_rates_for_single_gseq
 
-        return plot_amplitudes_for_single_gseq(
+        return plot_flux_rates_for_single_gseq(
             self, annotate_mean=annotate_mean, **scatter_kwargs
         )
 

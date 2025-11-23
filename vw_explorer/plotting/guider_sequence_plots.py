@@ -4,7 +4,6 @@ from typing import Iterable, Optional, Tuple, Union
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.figure import Figure
-from PIL import Image
 from ..classes.guider_sequence import GuiderSequence
 from .guider_image_plotting import plot_guidefit_model
 
@@ -40,6 +39,7 @@ def create_guider_gif(
     - figsize / dpi: ensure identical frame sizes
     - frames: optional iterable of indices to include (default: all)
     """
+    from PIL import Image
     out_path = Path(out_path)
     if frames is None:
         indices = range(min(len(seq.frames), len(seq.models)))
@@ -71,10 +71,14 @@ def create_guider_gif(
     )
     return out_path
 
+
 def plot_guider_sequence_summary(gseq: GuiderSequence) -> Figure:
-    fig, axes = plt.subplots(2, 2, figsize=(8, 7), gridspec_kw={"height_ratios": [3, 1]})
-    gseq.plot_initial_frame(ax=axes[0, 0], center_around="fiducial", cutout_size=70)
+    fig, axes = plt.subplots(
+        2, 2, figsize=(8, 7), gridspec_kw={"height_ratios": [3, 1]}
+    )
+    gseq.plot_initial_frame(ax=axes[0, 0], center_around="none", cutout_size=70)
     gseq.plot_centroid_positions("fiducial", ax=axes[0, 1])
     gseq.plot_fwhm_timeseries(ax=axes[1, 0])
-    gseq.plot_amplitude_timeseries(ax=axes[1, 1])
+    gseq.plot_flux_rate_timeseries(ax=axes[1, 1])
+    fig.tight_layout()
     return fig

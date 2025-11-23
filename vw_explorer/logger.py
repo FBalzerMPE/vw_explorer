@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 
 from colorama import Fore, Style, init
+from typing import Optional, Union
 
 # Initialize colorama for Windows compatibility
 init(autoreset=True)
@@ -30,7 +31,7 @@ class ColorFormatter(logging.Formatter):
 
 def setup_logger(
     name,
-    log_file: str | Path | None = None,
+    log_file: Optional[Union[str, Path]] = None,
     level=logging.INFO,
     fmt_colors: bool = True,
 ):

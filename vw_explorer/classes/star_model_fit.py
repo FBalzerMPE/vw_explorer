@@ -47,7 +47,26 @@ class GuideStarModel:
     @property
     def amplitude(self) -> float:
         """The fitted amplitude of the Gaussian, divided by exposure time."""
-        return self.model.amplitude_0 / self.exptime  # type: ignore
+        return self.model.amplitude_0  # type: ignore
+
+    @property
+    def total_flux_rate(self) -> float:
+        """The total flux of the fitted Gaussian, divided by exposure time.
+
+        The total flux for a 2D Gaussian is the integral of this function over all x and y, which evaluates to:
+
+            Flux = A * 2 * pi * sigma_x * sigma_y
+
+        Where:
+            A        : Amplitude (peak value).
+            sigma_x  : Standard deviation in the x-direction.
+            sigma_y  : Standard deviation in the y-direction.
+        For the flux rate, we divide by the exposure time.
+        """
+        x_std = self.model.x_stddev_0  # type: ignore
+        y_std = self.model.y_stddev_0  # type: ignore
+        flux = 2 * np.pi * x_std * y_std * self.model.amplitude_0  # type: ignore
+        return flux / self.exptime
 
     @property
     def fwhm_pix(self) -> float:

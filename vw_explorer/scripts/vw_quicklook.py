@@ -14,13 +14,13 @@ def parse_args():
         type=str,
         nargs="?",
         default=None,
-        help="Input FITS file(s) in the format 'vwXXXXXX' or 'vwXXXXXX-YYY', or XXXX, or XXXX-YY where the hyphen indicates a range. If not provided, looks for the latest fits file following the format 'vw*.fits'.",
+        help="Input FITS file(s) in the format 'vwXXXXXX' or 'vwXXXXXX-YYY', or XXXX, or XXXX-YY where the hyphen indicates a range. Comma separators may also be used. If not provided, looks for the latest fits file following the format 'vw*.fits'.",
     )
     parser.add_argument(
         "cmap",
         type=str,
         nargs="?",
-        default="gray",
+        default="hot",
         help="Colormap to use for the quicklook visualization.",
     )
     parser.add_argument(

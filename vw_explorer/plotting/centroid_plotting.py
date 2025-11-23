@@ -6,7 +6,7 @@ from matplotlib.lines import Line2D
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 
-from ..calculations import get_clipped_mask_by_distance
+from ..calculations import get_clipping_kept_mask_by_distance
 
 
 from ..classes import GuiderSequence
@@ -20,15 +20,13 @@ def _symmetrize_axis_limits(ax: Axes, min_width: Optional[float] = None):
     y_center = (ylim[0] + ylim[1]) / 2
     x_range = max(abs(xlim[1] - x_center), abs(xlim[0] - x_center))
     y_range = max(abs(ylim[1] - y_center), abs(ylim[0] - y_center))
+    x_range = min(max(x_range, y_range), 512)
+    y_range = x_range
     if min_width is not None:
         x_range = max(x_range, min_width / 2)
         y_range = max(y_range, min_width / 2)
     xmin, xmax = x_center - x_range, x_center + x_range
     ymin, ymax = y_center - y_range, y_center + y_range
-    xmin = max(0, xmin)
-    ymin = max(0, ymin)
-    xmax = min(xmax, 512)
-    ymax = min(ymax, 512)
     ax.set_xlim(xmin, xmax)
     ax.set_ylim(ymin, ymax)
 
@@ -115,7 +113,7 @@ def plot_centroids_for_single_gseq(
     scatter_kwargs.setdefault("marker", "x")
     scatter_kwargs.setdefault("color", "k")
     if separate_outliers:
-        clip_mask = get_clipped_mask_by_distance(centroids)
+        clip_mask = get_clipping_kept_mask_by_distance(centroids)
         ax.scatter(x_centroids[clip_mask], y_centroids[clip_mask], **scatter_kwargs)
         ax.scatter(
             x_centroids[~clip_mask],

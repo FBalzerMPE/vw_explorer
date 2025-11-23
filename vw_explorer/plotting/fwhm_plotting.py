@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 
-from ..calculations.clipping import get_clipped_mask
+from ..calculations.clipping import get_clipping_kept_mask
 
 from ..classes import GuiderSequence, ObservationSequence
 from .util import change_time_labels, get_mid_times
@@ -89,14 +89,13 @@ def plot_fwhms_for_single_gseq(
     plot_kwargs = plot_kwargs.copy()
 
     mean_fwhm, std_fwhm = gseq.get_fwhm_stats()
-    plot_kwargs.setdefault("marker", "o")
-    plot_kwargs.setdefault("linestyle", "--")
+    plot_kwargs.setdefault("marker", "x")
+    plot_kwargs.setdefault("linestyle", "none")
     plot_kwargs.setdefault("markersize", 10)
-    plot_kwargs.setdefault("lw", 0.5)
-    plot_kwargs.setdefault("color", "gray")
-    plot_kwargs.setdefault("markerfacecolor", "b")
+    plot_kwargs.setdefault("color", "blue")
     all_fwhms = gseq.get_fwhms_arcsec(sigmaclip_val=None)
-    clip_mask = get_clipped_mask(all_fwhms)
+    clip_mask = get_clipping_kept_mask(all_fwhms)
+    ax.plot(gseq.guider_times[clip_mask], all_fwhms[clip_mask], ls="-", color="gray", lw=0.5)
     ax.plot(gseq.guider_times[clip_mask], all_fwhms[clip_mask], **plot_kwargs)
     plot_kwargs["alpha"] = 0.5
     plot_kwargs["color"] = "red"

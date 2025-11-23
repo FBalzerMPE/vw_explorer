@@ -4,14 +4,14 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "vw_explorer"
-version = "0.1.2"
+version = "0.2.0"
 authors = [
     { name = "Fabian Balzer", email = "fbalzer@mpe.mpg.de" }
 ]
 license-files = ["LICENSE"]
 description = "A tool for exploring data from the VIRUS-W instrument at the Harlan-J-Smith telescope at McDonald Observatory."
 readme = "README.md"
-keywords = ["astronomy", "data analysis", "guider"]
+keywords = ["astronomy", "data analysis", "guider", "telescope", "spectrograph"]
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
@@ -32,7 +32,7 @@ requires-python = ">=3.6"
 
 [project.scripts]
 vw_quicklook = "vw_explorer.scripts.vw_quicklook:main"
-vw_guider_look = "vw_explorer.scripts.vw_guider_look:main"
+vw_process_guideframes = "vw_explorer.scripts.vw_process_guideframes:main"
 
 [tool.setuptools]
 include-package-data = true

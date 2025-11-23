@@ -2,14 +2,14 @@ from ..classes import GuiderFrame
 from typing import Optional, List
 import numpy as np
 
-from .clipping import get_clipped_mask_by_distance
+from .clipping import get_clipping_kept_mask_by_distance
 
 
 def stack_frames(frames: List[GuiderFrame], centroids: np.ndarray, sigmaclip_val: Optional[float]) -> np.ndarray:
         """Returns the stacked guider frame data by averaging all frames
         after aligning them based on their fitted centroids.
         """
-        mask = get_clipped_mask_by_distance(centroids, sigmaclip_val=sigmaclip_val)
+        mask = get_clipping_kept_mask_by_distance(centroids, sigmaclip_val=sigmaclip_val)
         # Only stack non-outlier frames.
         # Use the centroid positions as offsets.
         ctr_used = centroids[mask]
