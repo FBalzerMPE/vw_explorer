@@ -27,6 +27,7 @@ dependencies = [
     "typing-extensions",
     "pyyaml",
     "tqdm",
+    "colorama"
 ]
 requires-python = ">=3.6"
 

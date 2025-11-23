@@ -96,7 +96,7 @@ def process_observation_data(
     guider_sequences = [
         g_seq
         for ch in tqdm(
-            filtered_chunks, desc="Fitting guider sequences", color="darkgreen"
+            filtered_chunks, desc="Fitting guider sequences", colour="darkgreen"
         )
         for g_seq in ch.obs_seq.get_guider_sequences()
     ]
