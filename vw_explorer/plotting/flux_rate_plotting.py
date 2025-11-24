@@ -20,7 +20,6 @@ def plot_flux_rate_series(
         all_times.extend([f.ut_time for f in s.frames])
 
     ax.plot(all_times, all_flux_rates, "-", color="k", alpha=0.3)
-
     flux_rates = np.array([s.get_flux_rate_stats() for s in gseq])
     mid_times = get_mid_times(oseq.observations)
     xerr = np.array([timedelta(seconds=o.exptime / 2) for o in oseq])
@@ -32,12 +31,13 @@ def plot_flux_rate_series(
         yerr=flux_rates[:, 1],
         fmt="o",
         capsize=5,
-        label="Mean Flux Rate (no sigmaclip)",
+        label="Mean Flux Rate (sigmaclipped with $4\\sigma$)",
         color="green",
     )
 
     ax.set_ylabel("Flux Rate (a.u.)")
     ax.set_title("Flux Rate of guide star fit")
+    ax.grid(True)
     change_time_labels(ax, mid_times, oseq.time_range)
     ax.legend(loc="lower left")
     ymax = 1.1 * np.nanpercentile(all_flux_rates, 98)
@@ -92,13 +92,13 @@ def plot_flux_rates_for_single_gseq(
     ax.plot(gseq.guider_times, flux_rates, ls="-", color="gray", lw=0.5)
     ax.plot(gseq.guider_times, flux_rates, **plot_kwargs)
     _set_flux_rate_ylimits(ax, flux_rates)
+    ts = gseq.observation.timeslot
+    if ts is not None:
+        change_time_labels(ax, gseq.guider_times, (ts.start_time, ts.end_time))
     ax.set_xlabel("Time (UT)")
     ax.set_ylabel("Flux Rate (a.u.)")
     ax.set_title("Flux Rate")
     ax.grid(True)
-    ts = gseq.observation.timeslot
-    if ts is not None:
-        change_time_labels(ax, gseq.guider_times, (ts.start_time, ts.end_time))
 
     if not annotate_mean:
         return ax

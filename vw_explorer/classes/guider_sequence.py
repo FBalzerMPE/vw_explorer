@@ -71,6 +71,7 @@ class GuiderSequence:
         flux_rate_stds = flux_rates[:, 1]
         data = {
             "filename": [s.observation.filename for s in sequences],
+            "num_guider_frames": [len(s) for s in sequences],
             "centroid_x_mean": cent_means[:, 0],
             "centroid_y_mean": cent_means[:, 1],
             "flux_rate_mean": flux_rate_means,
@@ -82,14 +83,14 @@ class GuiderSequence:
         }
         return pd.DataFrame(data)
 
-    def get_flux_rates(self, sigmaclip_val: Optional[float] = None) -> np.ndarray:
+    def get_flux_rates(self, sigmaclip_val: Optional[float] = 4) -> np.ndarray:
         if sigmaclip_val is None:
             return np.array([m.total_flux_rate for m in self.models])
-        flux_rates = self.get_flux_rates(sigmaclip_val=None)
+        flux_rates = self.get_flux_rates(sigmaclip_val=4)
         return flux_rates[get_clipping_kept_mask(flux_rates, sigmaclip_val=sigmaclip_val)]
 
     def get_flux_rate_stats(
-        self, sigmaclip_val: Optional[float] = None
+        self, sigmaclip_val: Optional[float] = 4
     ) -> Tuple[float, float]:
         flux_rates = self.get_flux_rates(sigmaclip_val=sigmaclip_val)
         if len(flux_rates) == 0:

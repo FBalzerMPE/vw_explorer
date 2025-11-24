@@ -23,13 +23,12 @@ def _set_am_limits(ax: Axes, am_values: List[float]):
 
 def plot_airmass_series(
         oseq: ObservationSequence,
-        ax: Optional[Axes] = None,
+        ax: Optional[Axes] = None
     ):
     ax = ax if ax is not None else plt.gca()
     am = [o.airmass for o in oseq]
     mid_times = get_mid_times(oseq.observations)
     ax.plot(mid_times, am, "o-", color="purple")
-    
     ax.set_ylabel("Airmass")
     ax.set_title("Airmass")
     change_time_labels(ax, mid_times, oseq.time_range)

@@ -298,7 +298,7 @@ class Observation:
 
     @property
     def is_calibration_obs(self) -> bool:
-        """Is this observation a calibration frame (bias, dark, flat, etc.)?"""
+        """Is this observation a calibration frame (bias, arcs, domeflat, twilight, etc.)?"""
         return self.target.lower() in CALIB_NAMES
 
     @property

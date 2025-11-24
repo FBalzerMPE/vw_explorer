@@ -8,6 +8,7 @@ from .airmass_plotting import plot_airmass_series
 from .centroid_plotting import plot_centroid_series
 from .flux_rate_plotting import plot_flux_rate_series
 from .fwhm_plotting import plot_fwhm_series
+from .guide_frame_num_plotting import plot_guide_frame_nums
 
 
 def plot_dither_chunk_summary(dchunk: DitherChunk):
@@ -42,6 +43,9 @@ def plot_dither_chunk_summary(dchunk: DitherChunk):
     dithers = [obs.dither for obs in oseq.observations]
     plot_centroid_series(gseq, ax1, dithers)
     plot_airmass_series(oseq, ax2)
+    tax2 = ax2.twinx()
+    plot_guide_frame_nums(gseq, oseq, tax2)
+    ax2.set_title("Airmass and Number of Guide Frames/Observation")
     plot_fwhm_series(gseq, oseq, ax3)
     plot_flux_rate_series(gseq, oseq, ax4)
     fig.tight_layout(rect=[0, 0.03, 1, 0.95], h_pad=0.1)  # type: ignore

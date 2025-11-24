@@ -78,7 +78,8 @@ def process_observation_data(
     if output_fpath.exists() and not force_guide_refit:
         LOGGER.info(f"Loading existing processed data from {output_fpath}")
         existing_data = pd.read_csv(output_fpath)
-        processed_filenames = set(existing_data["filename"])
+        processed_subset = existing_data[existing_data["num_guider_frames"] > 0]
+        processed_filenames = set(processed_subset["filename"])
         filtered_chunks = [
             ch
             for ch in relevant_chunks
@@ -96,7 +97,7 @@ def process_observation_data(
     guider_sequences = [
         g_seq
         for ch in tqdm(
-            filtered_chunks, desc="Fitting guider sequences", colour="darkgreen"
+            filtered_chunks, desc="Fitting guider sequences", colour="GREEN"
         )
         for g_seq in ch.obs_seq.get_guider_sequences()
     ]

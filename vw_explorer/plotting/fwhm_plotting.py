@@ -1,4 +1,5 @@
 
+from datetime import timedelta
 from typing import List, Optional
 import numpy as np
 
@@ -23,22 +24,24 @@ def _set_fwhm_ylimits(ax: Axes, fwhm_values: List[float]):
     ax.set_ylim(0, top=ymax)
 
 def plot_fwhm_series(
-    gseq: List[GuiderSequence], oseq: ObservationSequence, ax: Optional[Axes] = None
+    gseqs: List[GuiderSequence], oseq: ObservationSequence, ax: Optional[Axes] = None
 ):
     """Helper function to plot FWHM summary for a list of GuiderSequences."""
     ax = ax if ax is not None else plt.gca()
     all_fwhms, all_times = [], []
-    for s in gseq:
+    for s in gseqs:
         all_fwhms.extend(s.get_fwhms_arcsec(sigmaclip_val=None))
         all_times.extend([f.ut_time for f in s.frames])
 
     ax.plot(all_times, all_fwhms, "-", color="k", alpha=0.3)
-    fwhms = np.array([s.get_fwhm_stats() for s in gseq])
+    fwhms = np.array([s.get_fwhm_stats() for s in gseqs])
     mid_times = get_mid_times(oseq.observations)
+    xerr = np.array([timedelta(seconds=o.exptime / 2) for o in oseq])
     ax.errorbar(
         mid_times,
         fwhms[:, 0],
         yerr=fwhms[:, 1],
+        xerr=xerr,
         fmt="o",
         capsize=5,
         label="Fitted FWHM (sigmaclipped with $2.5\\sigma$)",
@@ -53,8 +56,9 @@ def plot_fwhm_series(
             s=20,
             color="red",
             label="FWHM reported in log",
+            zorder=3,
         )
-    
+    ax.grid(True)
     ax.set_ylabel("FWHM (arcsec)")
     ax.set_title("FWHM")
     change_time_labels(ax, mid_times, oseq.time_range)
