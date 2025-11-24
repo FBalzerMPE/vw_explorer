@@ -36,9 +36,12 @@ no significant change since yesterday, taking testImage to confirm
 # vw001465       01:19:53	test				5	63292	-	-		1.14	
 
 > execute(build_dither_program(targetname='NGC7465', exptime=1200, dodither=[1,1,1,1,1,1], skyexptime=0))
-vw001466       01:35:58 NGC7465_D1		        1200	63292	1.5     322.4,311.9     1.05	-
-vw001467       01:57:14	NGC7465_D2			1200	63292	1.6	327.7,314.7	1.03	TCS software crash on PC, guiding and tracking has continued
-vw001468       02:18:29	NGC7465_D3			1200	63292	1.5	322.4,317.5	1.03	-
-vw001469       02:39:45	NGC7465_D4			1200	63292	1.6	320.9,314.7	1.04	-
-vw001470       03:01:01	NGC7465_D5			1200	63292	1.4	326.2,311.4	1.05	Hint of clouds on timelapse
-vw001471       03:22:17 NGC7465_D6			1200	63292	1.5	326.2,317.7	1.07	-
+vw001466       01:35:58 NGC7465_D1		    1200	63292	1.5     322.4,311.9     1.05	-
+vw001467       01:57:14	NGC7465_D2			1200	63292	1.6	    327.7,314.7	1.03	TCS software crash on PC, guiding and tracking has continued
+vw001468       02:18:29	NGC7465_D3			1200	63292	1.5	    322.4,317.5	1.03	-
+vw001469       02:39:45	NGC7465_D4			1200	63292	1.6	    320.9,314.7	1.04	-
+vw001470       03:01:01	NGC7465_D5			1200	63292	1.4	    326.2,311.4	1.05	Hint of clouds on timelapse
+vw001471       03:22:17 NGC7465_D6			1200	63292	1.5	    326.2,317.7	1.07	-
+
+> subdither('M52', 120, 1)
+vw001479-84    06:13:54	M52				    120x6	63292	1.8	    342.1,172.2	1.45	-
