@@ -65,7 +65,7 @@ class GuiderSequence:
         fwhm_means = fwhms[:, 0]
         fwhm_stds = fwhms[:, 1]
         flux_rates = np.array(
-            [s.get_flux_rate_stats(sigmaclip_val=None) for s in sequences]
+            [s.get_flux_rate_stats(sigmaclip_val=4) for s in sequences]
         )
         flux_rate_means = flux_rates[:, 0]
         flux_rate_stds = flux_rates[:, 1]
@@ -86,7 +86,7 @@ class GuiderSequence:
     def get_flux_rates(self, sigmaclip_val: Optional[float] = 4) -> np.ndarray:
         if sigmaclip_val is None:
             return np.array([m.total_flux_rate for m in self.models])
-        flux_rates = self.get_flux_rates(sigmaclip_val=4)
+        flux_rates = self.get_flux_rates(sigmaclip_val=None)
         return flux_rates[get_clipping_kept_mask(flux_rates, sigmaclip_val=sigmaclip_val)]
 
     def get_flux_rate_stats(
