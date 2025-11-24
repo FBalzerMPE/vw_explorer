@@ -23,7 +23,7 @@ If you plan on editing the code on your machine, instead use
 ```bash
 pip install -e .
 ```
-⚠️ Also, it might be advisable to use a dedicated `venv` or `conda` virtual environment with python 3.6 for this, as the project relies on outdated `matplotlib|astropy|scipy` packages in order to work on the linux machine at HJS.
+:warning: Also, it might be advisable to use a dedicated `venv` or `conda` virtual environment with python 3.6 for this, as the project relies on outdated `matplotlib|astropy|scipy` packages in order to work on the linux machine at HJS.
 
 This installation allows you to use `import vw_explorer as vwe` in your scripts and notebooks whenever the environment you've installed it in is active.
 
@@ -48,7 +48,7 @@ Upon installation via `pip install`, two shortcuts will be added to your command
 - **`vw_process_guideframes`** allows you to process the observation log file into csv format, split the observations into dither chunks, and analyze the corresponding guider frames by fitting 2D Gaussians to the regions around the fiducial coordinates specified in the log. Run `vw_process_guideframes -h` in your terminal for more information.\
   The processed csv files and plots are saved in the `ouput` directory specified within the 
 
-⚠️ In order to process the log file, it is important that it follows the expected format. If you are unsure how that should look like, see `vw_explorer/example_data/log.txt` for an example with some further explanation.
+:warning: In order to process the log file, it is important that it follows the expected format. If you are unsure how that should look like, see `vw_explorer/example_data/log.txt` for an example with some further explanation.
 
 ## Example usage
 
