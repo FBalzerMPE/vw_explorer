@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import List, Optional
 
-from ..constants import OBS_PATH
+from ..constants import CONFIG
 from ..logger import LOGGER
 
 
@@ -48,8 +48,8 @@ def parse_vw_filenames(f_in: str, add_fits_extension: bool = False) -> List[str]
 def _find_vw_files(
     filenames: List[Path], remove_nonexisting: bool = True
 ) -> List[Path]:
-    """Check each filename for existence, and if not, try to identify its path in the OBS_PATH directory and subdirectory."""
-    all_avail_files = set(OBS_PATH.rglob("vw*.fits"))
+    """Check each filename for existence, and if not, try to identify its path in the observation directory and subdirectory."""
+    all_avail_files = set(CONFIG.obs_dir.rglob("vw*.fits"))
     fname_dict = {f.name: f for f in all_avail_files}
     not_avail = []
     existing_files = []

@@ -1,6 +1,8 @@
 from matplotlib.axes import Axes
 from typing import List, Tuple
 from datetime import datetime
+
+from matplotlib.ticker import MaxNLocator
 from ..classes import Observation
 import numpy as np
 
@@ -9,19 +11,13 @@ def change_time_labels(ax: Axes, mid_times: List[datetime], time_range: Tuple[da
     Add extra ticks at start and end of time_range if only one mid_time is provided.
 
     """
-    if len(mid_times) <= 1:
-        mid_times = [time_range[0], mid_times[0], time_range[1]]
-    elif len(mid_times) > max_num_labels:
-        # Instead, construct evenly spaced times within the time range
-        new_times = []
-        for i in range(max_num_labels):
-            frac = i / (max_num_labels - 1)
-            new_time = time_range[0] + (time_range[1] - time_range[0]) * frac
-            new_times.append(new_time)
-        mid_times = new_times
-    t_labels = [st.strftime(fmt) for st in mid_times]
-    ax.set_xticks(mid_times)
-    ax.set_xticklabels(t_labels, rotation=40, ha="right")  
+    import matplotlib.dates as mdates
+
+    ax.xaxis.set_major_locator(MaxNLocator(nbins=6))
+    ax.xaxis.set_major_formatter(mdates.DateFormatter(fmt))
+    for label in ax.get_xticklabels():
+        label.set_rotation(40)
+        label.set_horizontalalignment('right')
 
 def get_mid_times(obs: List[Observation]) -> np.ndarray:
     """Get mid times for a list of Observation objects."""

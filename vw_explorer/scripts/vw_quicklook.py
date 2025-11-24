@@ -17,9 +17,8 @@ def parse_args():
         help="Input FITS file(s) in the format 'vwXXXXXX' or 'vwXXXXXX-YYY', or XXXX, or XXXX-YY where the hyphen indicates a range. Comma separators may also be used. If not provided, looks for the latest fits file following the format 'vw*.fits'.",
     )
     parser.add_argument(
-        "cmap",
+        "--cmap",
         type=str,
-        nargs="?",
         default="hot",
         help="Colormap to use for the quicklook visualization.",
     )

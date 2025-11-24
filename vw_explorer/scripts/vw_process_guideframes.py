@@ -2,21 +2,11 @@ import argparse
 from pathlib import Path
 from typing import Optional
 
-from vw_explorer import DATA_PATH
+from vw_explorer import CONFIG
 from vw_explorer.io.processing.data_processing import process_observation_data
 from vw_explorer.io.processing.summary_plots import generate_dither_chunk_plots
 from vw_explorer.logger import LOGGER
 
-
-def _sanitize_logfile_path(input_path: Optional[Path]) -> Optional[Path]:
-    logfile_path = DATA_PATH if input_path is None else Path(input_path)
-    if logfile_path.is_dir():
-        logfile_path = logfile_path / "log.txt"
-    if not logfile_path.exists():
-        return None
-    if input_path is None:
-        LOGGER.info(f"No log file provided, using default at {logfile_path}")
-    return logfile_path
 
 
 def parse_args():
@@ -53,14 +43,14 @@ def main():
     args = parse_args()
     filtered_chunks = None
     if args.generate_dataframe:
-        logfile_path = _sanitize_logfile_path(args.logfile_path)
+        logfile_path = CONFIG.sanitize_logfile_path(args.logfile_path)
         if logfile_path is None:
             raise ValueError("No log file found.")
         _, _, filtered_chunks = process_observation_data(
             logfile_path, force_log_reload=True, force_guide_refit=args.force_guideframe_refit
         )
     if args.produce_plots:
-        output_dir = DATA_PATH / "output"
+        output_dir = CONFIG.output_dir
         if filtered_chunks is None:
             LOGGER.info(
                 "No prior processing done, thus the loading times will be longer."

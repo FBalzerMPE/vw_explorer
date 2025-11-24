@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, List
 
 from ..logger import LOGGER
-from ..constants import OBS_PATH
+from ..constants import CONFIG
 from .log_sanitization import filter_and_clean_logfile, parse_date_line
 
 if TYPE_CHECKING:
@@ -17,7 +17,7 @@ def parse_obs_logfile(logfile_path: Path) -> List["Observation"]:
 
     """
     # Walk the base datapath to find the file
-    avail_files = {f.stem: f for f in OBS_PATH.glob("**/vw*.fits")}
+    avail_files = {f.stem: f for f in CONFIG.obs_dir.glob("**/vw*.fits")}
     from ..classes import Observation
 
     current_date = date.today()

@@ -1,19 +1,21 @@
 from pathlib import Path
+from .setup import VWEConfig
 
-from .setup import CONFIG
+CONFIG = VWEConfig()
+"""The global configuration object for vw_explorer."""
 
 GUIDER_PIXSCALE = 0.533
 """The pixel scale of the VW guider camera in arcseconds per pixel."""
 ROOT_DIR = Path(__file__).parent
 ASSET_PATH = ROOT_DIR / "assets"
-DATA_PATH = Path(CONFIG["paths"]["data_dir"])
-"""The path to the data directory."""
-GUIDER_PATH = Path(CONFIG["paths"]["guider_dir"])
-"""The path to the guider frames directory."""
-OBS_PATH = Path(CONFIG["paths"]["observation_dir"])
-"""The path to the observation FITS files directory."""
-OUTPUT_PATH = Path(CONFIG["paths"]["output_dir"])
-"""The path to the output directory."""
+# DATA_PATH = Path(CONFIG["paths"]["data_dir"])
+# """The path to the data directory."""
+# GUIDER_PATH = Path(CONFIG["paths"]["guider_dir"])
+# """The path to the guider frames directory."""
+# OBS_PATH = Path(CONFIG["paths"]["observation_dir"])
+# """The path to the observation FITS files directory."""
+# OUTPUT_PATH = Path(CONFIG["paths"]["output_dir"])
+# """The path to the output directory."""
 
 CALIB_NAMES = [
     "unknown",

@@ -5,7 +5,7 @@ import pandas as pd
 from tqdm import tqdm
 
 from ...classes import DitherChunk, GuiderSequence, Observation
-from ...constants import OUTPUT_PATH
+from ...constants import CONFIG
 from ...logger import LOGGER
 from ..dither_chunk_loading import load_dither_chunk_dataframe
 from ..observation_loading import load_observations
@@ -74,7 +74,7 @@ def process_observation_data(
     chunks = [ch for ch_list in ch_dict.values() for ch in ch_list]
     relevant_chunks = [ch for ch in chunks if not ch.is_calibration_obs]
 
-    output_fpath = OUTPUT_PATH / "observations_processed.csv"
+    output_fpath = CONFIG.output_dir / "observations_processed.csv"
     if output_fpath.exists() and not force_guide_refit:
         LOGGER.info(f"Loading existing processed data from {output_fpath}")
         existing_data = pd.read_csv(output_fpath)

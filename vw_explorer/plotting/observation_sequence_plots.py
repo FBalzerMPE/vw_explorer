@@ -15,13 +15,13 @@ def plot_dither_chunk_summary(dchunk: DitherChunk):
     """Plots a summary of the guider sequences within a dither chunk."""
     oseq = dchunk.obs_seq
     summary = oseq.get_summary(max_line_length=40)
-    gseq = oseq.get_guider_sequences(remove_failed=True)
-    if len(gseq) == 0:
+    gseqs = oseq.get_guider_sequences(remove_failed=True)
+    if len(gseqs) == 0:
         LOGGER.warning(
             f"Target '{dchunk.target}', DC{dchunk.chunk_index}: No guider sequences found, skipping plot."
         )
         return
-    if gseq is None:
+    if gseqs is None:
         LOGGER.error("Guider sequences not loaded. Call load_guider_sequences() first.")
         return
     fig = plt.figure(figsize=(12, 10))
@@ -41,11 +41,11 @@ def plot_dither_chunk_summary(dchunk: DitherChunk):
         bbox={"boxstyle": "round", "facecolor": "wheat", "alpha": 0.5},
     )
     dithers = [obs.dither for obs in oseq.observations]
-    plot_centroid_series(gseq, ax1, dithers)
+    plot_centroid_series(gseqs, ax1, dithers)
     plot_airmass_series(oseq, ax2)
     tax2 = ax2.twinx()
-    plot_guide_frame_nums(gseq, oseq, tax2)
+    plot_guide_frame_nums(gseqs, oseq, tax2)
     ax2.set_title("Airmass and Number of Guide Frames/Observation")
-    plot_fwhm_series(gseq, oseq, ax3)
-    plot_flux_rate_series(gseq, oseq, ax4)
+    plot_fwhm_series(gseqs, oseq, ax3)
+    plot_flux_rate_series(gseqs, oseq, ax4)
     fig.tight_layout(rect=[0, 0.03, 1, 0.95], h_pad=0.1)  # type: ignore

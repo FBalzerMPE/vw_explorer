@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, List, Optional
 import pandas as pd
 from typing_extensions import Literal
 
-from ..constants import OUTPUT_PATH
+from ..constants import CONFIG
 from ..logger import LOGGER
 from .log_parsing import parse_obs_logfile
 from .dither_chunk_loading import load_dither_chunk_dataframe
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from ..classes import Observation
 
 
-def load_obs_df(which: Literal["raw", "processed"] = "raw") -> pd.DataFrame:
+def load_obs_dataframe(which: Literal["raw", "processed"] = "raw") -> pd.DataFrame:
     """
     Loads the observation DataFrame from a backup CSV file.
 
@@ -27,7 +27,7 @@ def load_obs_df(which: Literal["raw", "processed"] = "raw") -> pd.DataFrame:
     pd.DataFrame
         DataFrame containing observation data.
     """
-    backup_path = OUTPUT_PATH / f"observations_{which}.csv"
+    backup_path = CONFIG.output_dir / f"observations_{which}.csv"
     obs_df = pd.read_csv(backup_path)
     LOGGER.debug(
         f"Loaded {len(obs_df)} observations from backup CSV at {backup_path}."
@@ -36,7 +36,6 @@ def load_obs_df(which: Literal["raw", "processed"] = "raw") -> pd.DataFrame:
 
 def load_observations(
     logfile_path: Optional[Path] = None,
-    backup_path=OUTPUT_PATH / "observations_raw.csv",
     force_log_reload: bool = False,
 ) -> List["Observation"]:
     """
@@ -46,9 +45,10 @@ def load_observations(
     """
     from ..classes import Observation
 
-    logfile_path = Path(logfile_path) if logfile_path else None
+    logfile_path = CONFIG.sanitize_logfile_path(logfile_path)
+    backup_path = CONFIG.output_dir / "observations_raw.csv"
     if backup_path.exists() and not force_log_reload:
-        obs_df = load_obs_df(which="raw")
+        obs_df = load_obs_dataframe(which="raw")
         obs_list = Observation.from_dataframe(obs_df)
         LOGGER.debug(
             f"Skipping log parsing, loading {len(obs_list)} observations from backup CSV."

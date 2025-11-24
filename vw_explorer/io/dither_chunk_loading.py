@@ -1,7 +1,7 @@
 from typing import List, Optional, TYPE_CHECKING
 import pandas as pd
 
-from ..constants import OUTPUT_PATH
+from ..constants import CONFIG
 from ..logger import LOGGER
 
 if TYPE_CHECKING:
@@ -29,7 +29,7 @@ def load_dither_chunk(target_name: str, chunk_index: int
         The requested DitherChunk object.
     """
     from ..classes import DitherChunk
-    from .observation_loading import load_obs_df
+    from .observation_loading import load_obs_dataframe
 
     chunks_df = load_dither_chunk_dataframe()
     chunk_series = chunks_df[
@@ -42,14 +42,14 @@ def load_dither_chunk(target_name: str, chunk_index: int
             f"No dither chunk with index {chunk_index} found for target '{target_name}'. Available targets are:\n{avail_targets}"
         )
     try:
-        obs_df = load_obs_df()
+        obs_df = load_obs_dataframe()
     except Exception as e:
         obs_df = None
         LOGGER.error(f"Failed to load observations: {e}, will load them from fits files instead.")
     # Convert the Series to a DitherChunk
     return DitherChunk.from_series(chunk_series.iloc[0], obs_df=obs_df)
 
-def load_dither_chunk_dataframe(backup_fpath=OUTPUT_PATH / "dither_chunks.csv", observations: Optional[List["Observation"]] = None) -> pd.DataFrame:
+def load_dither_chunk_dataframe(observations: Optional[List["Observation"]] = None) -> pd.DataFrame:
     """
     Creates a backup CSV file containing dither chunk information for the given observations.
 
@@ -61,7 +61,7 @@ def load_dither_chunk_dataframe(backup_fpath=OUTPUT_PATH / "dither_chunks.csv", 
         List of Observation objects to process. If None, attempts to load from backup CSV.
     """
     from ..classes import DitherChunk
-
+    backup_fpath = CONFIG.output_dir / "dither_chunks.csv"
     # Generate dither chunks and save to backup
     if backup_fpath.exists() and observations is None:
         chunks_df = pd.read_csv(backup_fpath)

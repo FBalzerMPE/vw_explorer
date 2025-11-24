@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from astropy.io import fits
 
-from ..constants import DATA_PATH, GUIDER_PATH
+from ..constants import CONFIG
 from ..io.guider_indexing import create_guider_index, load_guider_index
 from .star_model_fit import GuideStarModel
 
@@ -33,9 +33,9 @@ class GuiderFrame:
     def __post_init__(self):
         self.frame_path = Path(self.frame_path)
         if not self.frame_path.exists():
-            self.frame_path = DATA_PATH / self.frame_path
+            self.frame_path = CONFIG.data_dir / self.frame_path
         if not self.frame_path.exists():
-            raise FileNotFoundError(f"Guider frame not found: {self.frame_path}")
+            raise FileNotFoundError(f"Guider frame not found: {self.frame_path}.\nYou might want to rerun create_guider_index(remove_nonexistent=True) to update the guider index.")
         self.header_data = fits.getheader(self.frame_path)  # type: ignore
         date = self.header_data["DATE-OBS"]
         time = self.header_data["UT"]
@@ -53,12 +53,12 @@ class GuiderFrame:
         return self._data  # type: ignore
 
     @staticmethod
-    def get_guider_index(guider_dir: Path = GUIDER_PATH, **kwargs) -> pd.DataFrame:
+    def get_guider_index(**kwargs) -> pd.DataFrame:
         """Creates and loads the guider index."""
         if "silent" not in kwargs:
             kwargs["silent"] = True
-        create_guider_index(guider_dir, **kwargs)
-        return load_guider_index(guider_dir)
+        create_guider_index(CONFIG.guider_dir, **kwargs)
+        return load_guider_index(CONFIG.guider_dir)
 
     def clear_data(self):
         """Clears the loaded image data to free memory."""
@@ -95,3 +95,7 @@ class GuiderFrame:
             size_in=size,
             exptime=self.exptime,
         )
+
+    def plot(self):
+        from ..plotting import plot_frame_cutout
+        plot_frame_cutout(self.data)

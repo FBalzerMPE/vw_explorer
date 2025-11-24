@@ -5,6 +5,7 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 
 from ...io import load_observations
+from ...constants import CONFIG
 
 from ...classes import GuiderSequence, DitherChunk
 from ...logger import LOGGER
@@ -54,7 +55,7 @@ def _plot_dither_chunk_summary(chunk: DitherChunk, output_path: Path):
         plt.close()
 
 def generate_dither_chunk_plots(
-    output_dir: Path,
+    output_dir: Path = CONFIG.output_dir,
     dither_chunks: Optional[List[DitherChunk]] = None,
 ):
     """
@@ -75,8 +76,8 @@ def generate_dither_chunk_plots(
     plot_dir = output_dir / "plots"
     obs_plot_dir = plot_dir / "observations"
     obs_plot_dir.mkdir(parents=True, exist_ok=True)
-    dither_chunk_dir = plot_dir / "dither_chunks"
-    dither_chunk_dir.mkdir(parents=True, exist_ok=True)
+    dith_plot_dir = plot_dir / "dither_chunks"
+    dith_plot_dir.mkdir(parents=True, exist_ok=True)
     LOGGER.info(f"Trying to generate plots for {len(dither_chunks)} dither chunks...")
     for chunk in tqdm(dither_chunks, desc="Generating dither chunk plots"):
         total_frames = 0
@@ -91,6 +92,6 @@ def generate_dither_chunk_plots(
                 f"Dither chunk '{chunk.target}', DC{chunk.chunk_index}: No guider frames found, skipping plot."
             )
             continue
-        chunk_plot_path = dither_chunk_dir / f"dither_chunk_{chunk.target}_{chunk.chunk_index}_summary.png"
+        chunk_plot_path = dith_plot_dir / f"dither_chunk_{chunk.target}_{chunk.chunk_index}_summary.png"
         _plot_dither_chunk_summary(chunk, chunk_plot_path)
 

@@ -91,7 +91,6 @@ def plot_fwhms_for_single_gseq(
     """
     ax = plt.gca() if ax is None else ax
     plot_kwargs = plot_kwargs.copy()
-
     mean_fwhm, std_fwhm = gseq.get_fwhm_stats()
     plot_kwargs.setdefault("marker", "x")
     plot_kwargs.setdefault("linestyle", "none")
@@ -106,7 +105,8 @@ def plot_fwhms_for_single_gseq(
     plot_kwargs["linestyle"] = "None"
     plot_kwargs["marker"] = "x"
     plot_kwargs["markersize"] = 8
-    ax.plot(gseq.guider_times[~clip_mask], all_fwhms[~clip_mask], **plot_kwargs)
+    if np.any(~clip_mask):  
+        ax.plot(gseq.guider_times[~clip_mask], all_fwhms[~clip_mask], **plot_kwargs)
     ts = gseq.observation.timeslot
     if ts is not None:
         change_time_labels(ax, gseq.guider_times, (ts.start_time, ts.end_time))

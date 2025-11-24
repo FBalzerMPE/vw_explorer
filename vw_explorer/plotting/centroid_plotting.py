@@ -47,12 +47,15 @@ def _generate_centroid_legend(ax: Axes, **kwargs):
     )
 
 def plot_centroid_series(
-    gseq: List[GuiderSequence],
+    gseqs: List[GuiderSequence],
     ax: Optional[Axes] = None,
     dithers: Optional[List[int]] = None,
 ):
     ax = ax if ax is not None else plt.gca()
-    for i, s in enumerate(gseq):
+    assert dithers is None or len(gseqs) == len(dithers), "Length of dithers must match number of GuiderSequences."
+    for i, s in enumerate(gseqs):
+        if len(s) == 0:
+            continue
         color = plt.cm.tab10(i % 6)  # type: ignore
         s.plot_centroid_positions(
             "origin",

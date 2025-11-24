@@ -1,3 +1,2 @@
-from .config_io import load_config
+from .vwe_config import VWEConfig
 
-CONFIG = load_config()
