@@ -1,6 +1,10 @@
 
 /data
 .vscode/
+*.pptx
+parse_log.ipynb
+*.ipynb_checkpoints
+
 *.csv
 **/log_sanitized.txt
 # Byte-compiled / optimized / DLL files

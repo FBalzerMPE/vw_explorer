@@ -1,11 +1,11 @@
 import argparse
 from pathlib import Path
-from typing import Optional
 
 from vw_explorer import CONFIG
 from vw_explorer.io.processing.data_processing import process_observation_data
 from vw_explorer.io.processing.summary_plots import generate_dither_chunk_plots
 from vw_explorer.logger import LOGGER
+from vw_explorer.util import try_play_notification_sound
 
 
 
@@ -60,6 +60,8 @@ def main():
         LOGGER.warning(
             "No action specified. Use --generate_dataframe and/or --produce_plots."
         )
+    else:
+        try_play_notification_sound()
 
 
 if __name__ == "__main__":

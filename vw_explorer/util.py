@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from .constants import ASSET_PATH
 
 def parse_isoformat(dt_str: str) -> datetime:
     """Parses an ISO 8601 datetime string, handling both with and without microseconds.
@@ -12,3 +13,14 @@ def parse_isoformat(dt_str: str) -> datetime:
         if "." in dt_str:
             return datetime.strptime(dt_str, "%Y%m%dT%H%M%S.%f")
         return datetime.strptime(dt_str, "%Y%m%dT%H%M%S")
+
+
+def try_play_notification_sound():
+    soundpath = ASSET_PATH / "notify.wav"
+    try:
+        if not soundpath.exists():
+            return
+        from playsound import playsound
+        playsound(str(soundpath))
+    except ImportError:
+        pass
